@@ -675,11 +675,31 @@ button.projects-type-tab:focus-visible {
   gap: 0.7rem;
   align-items: center;
 }
+.creative-like-btn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  color: #4a3728;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+}
 .creative-post-icon {
   width: 20px;
   height: 20px;
   color: #4a3728;
   flex-shrink: 0;
+  transition: transform .2s ease, color .2s ease, fill .2s ease, stroke .2s ease;
+}
+.creative-like-btn:hover .creative-post-icon { transform: scale(1.08); }
+.creative-like-btn[aria-pressed="true"] .creative-post-icon,
+.creative-item.liked .creative-like-btn .creative-post-icon {
+  color: #d9305a;
+  stroke: #d9305a;
+  fill: rgba(217, 48, 90, 0.18);
 }
 .creative-post-caption,
 .creative-caption.creative-post-caption {

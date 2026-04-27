@@ -729,6 +729,57 @@ const CREATIVE_PREVIEW_PHOTOS = 4;
 const CREATIVE_PREVIEW_VIDEOS = 2;
 
 let creativeExpanded = false;
+const CREATIVE_LIKES_STORAGE_KEY = 'portfolioCreativeLikesV1';
+let creativeLikes = new Set();
+
+function loadCreativeLikes() {
+  try {
+    const raw = localStorage.getItem(CREATIVE_LIKES_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) creativeLikes = new Set(parsed.filter(Boolean));
+  } catch {
+    creativeLikes = new Set();
+  }
+}
+
+function persistCreativeLikes() {
+  try {
+    localStorage.setItem(CREATIVE_LIKES_STORAGE_KEY, JSON.stringify([...creativeLikes]));
+  } catch {
+    /* ignore storage quota/private-mode failures */
+  }
+}
+
+function isCreativeLiked(mediaId) {
+  return Boolean(mediaId) && creativeLikes.has(mediaId);
+}
+
+function updateLikedFilterCount() {
+  const likedBtn = document.querySelector('.creative-filters .filter-btn[data-filter="liked"]');
+  if (!likedBtn) return;
+  likedBtn.textContent = `Loved by You (${creativeLikes.size}) ✨`;
+}
+
+function syncCreativeLikeUi(item) {
+  if (!item) return;
+  const mediaId = item.dataset.mediaId || '';
+  const likeBtn = item.querySelector('.creative-like-btn');
+  const liked = isCreativeLiked(mediaId);
+  item.classList.toggle('liked', liked);
+  if (likeBtn) {
+    likeBtn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    likeBtn.setAttribute('aria-label', liked ? 'Unlike this post' : 'Like this post');
+  }
+}
+
+function toggleCreativeLike(mediaId) {
+  if (!mediaId) return;
+  if (creativeLikes.has(mediaId)) creativeLikes.delete(mediaId);
+  else creativeLikes.add(mediaId);
+  persistCreativeLikes();
+  updateLikedFilterCount();
+}
 
 /**
  * Shows or hides each `.creative-item` based on: (1) filter `all|photo|video`, and (2) whether
@@ -742,9 +793,10 @@ function applyCreativeVisibility() {
   const previewAll = filter === 'all' && !creativeExpanded;
 
   grid.querySelectorAll('.creative-item').forEach(cItem => {
-    const matchType = filter === 'all' || cItem.dataset.type === filter;
+    const matchType = filter === 'all' || filter === 'liked' || cItem.dataset.type === filter;
+    const matchLiked = filter !== 'liked' || isCreativeLiked(cItem.dataset.mediaId || '');
     const isExtra = cItem.classList.contains('extra');
-    const match = matchType && !(previewAll && isExtra);
+    const match = matchType && matchLiked && !(previewAll && isExtra);
 
     cItem.style.transition = 'opacity .3s, transform .3s';
     if (match) {
@@ -788,6 +840,7 @@ function initCreativeGallery() {
   const postIconComment = '<svg class="creative-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
   const postIconSend = '<svg class="creative-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
   const postIconBookmark = '<svg class="creative-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+  const postLikeButton = `<button type="button" class="creative-like-btn" aria-label="Like this post" aria-pressed="false">${postIconHeart}</button>`;
 
   let previewPhotoCount = 0;
   let previewVideoCount = 0;
@@ -806,6 +859,7 @@ function initCreativeGallery() {
     if (item.type === 'photo') {
       wrap.className = `creative-item photo reveal delay-${delayN}`;
       wrap.dataset.type = 'photo';
+      wrap.dataset.mediaId = item.file;
       wrap.innerHTML = `
         <div class="creative-post-frame">
           <div class="creative-post-header">
@@ -816,8 +870,8 @@ function initCreativeGallery() {
             <img loading="lazy" onerror="this.style.display='none'" alt="" />
             <div class="creative-placeholder photo-ph"><span>📷</span></div>
           </div>
-          <div class="creative-post-toolbar" aria-hidden="true">
-            <div class="creative-post-toolbar-left">${postIconHeart}${postIconComment}${postIconSend}</div>
+          <div class="creative-post-toolbar">
+            <div class="creative-post-toolbar-left">${postLikeButton}${postIconComment}${postIconSend}</div>
             <div class="creative-post-toolbar-right">${postIconBookmark}</div>
           </div>
           <p class="creative-post-caption creative-caption"></p>
@@ -829,6 +883,7 @@ function initCreativeGallery() {
     } else {
       wrap.className = `creative-item video reveal delay-${delayN}`;
       wrap.dataset.type = 'video';
+      wrap.dataset.mediaId = item.file;
       wrap.innerHTML = `
         <div class="creative-post-frame">
           <div class="creative-post-header">
@@ -839,8 +894,8 @@ function initCreativeGallery() {
             <video class="creative-video" playsinline preload="metadata"></video>
             <div class="creative-placeholder video-ph"><span>🎬</span></div>
           </div>
-          <div class="creative-post-toolbar" aria-hidden="true">
-            <div class="creative-post-toolbar-left">${postIconHeart}${postIconComment}${postIconSend}</div>
+          <div class="creative-post-toolbar">
+            <div class="creative-post-toolbar-left">${postLikeButton}${postIconComment}${postIconSend}</div>
             <div class="creative-post-toolbar-right">${postIconBookmark}</div>
           </div>
           <p class="creative-post-caption creative-caption"></p>
@@ -856,12 +911,28 @@ function initCreativeGallery() {
   });
 
   grid.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+  loadCreativeLikes();
+  updateLikedFilterCount();
+  grid.querySelectorAll('.creative-item').forEach(syncCreativeLikeUi);
 
   const filterBtns = document.querySelectorAll('.creative-filters .filter-btn');
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      applyCreativeVisibility();
+    });
+  });
+
+  grid.querySelectorAll('.creative-like-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const item = btn.closest('.creative-item');
+      if (!item) return;
+      const mediaId = item.dataset.mediaId || '';
+      toggleCreativeLike(mediaId);
+      syncCreativeLikeUi(item);
       applyCreativeVisibility();
     });
   });

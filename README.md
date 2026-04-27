@@ -10,7 +10,7 @@ A fully static, responsive portfolio that includes:
 - About with profile, interest tags, and info cards
 - **Projects** with two tabs: **Interactive Media** and **CS & HCI**; expandable grids on small screens
 - **Skills & experiences** timeline with expand/collapse
-- **Creative** gallery (photos and videos), filters, preview limits, and a shared lightbox
+- **Creative** gallery (photos and videos), filters, preview limits, likes, and a shared lightbox
 - **Contact** with Formspree and CV download / “View online”
 
 ## Tech stack
@@ -25,8 +25,8 @@ A fully static, responsive portfolio that includes:
 - Responsive nav and mobile drawer; optional custom cursor on desktop
 - Hero: particles, decorative assets, scroll hint, safe parallax on larger viewports
 - Projects: tabbed panels, project cards with links, mobile “View more” where used
-- CV: **Download** loads the PDF with `fetch`, then saves as `rabeya-cv.pdf` via a blob; **View online** opens an in-page modal with the same PDF embedded. Use **http(s)** locally so download works (see below).
-- Creative: interleaved photo/video grid, Instagram-style cards, lightbox carousel
+- CV: **Download** is wired to avoid same-tab navigation and save `rabeya-cv.pdf`; on supported hosts it uses `fetch` + blob and falls back to native download behavior when needed. **View online** opens an in-page modal with the same PDF embedded.
+- Creative: interleaved photo/video grid, Instagram-style cards, lightbox carousel, and per-item hearts with a persisted **Loved by You (N) ✨** filter
 - Contact: async submit, success/error feedback
 
 ## Project structure
@@ -51,7 +51,7 @@ cd Portfolio-Mily
 
 ### Serve over HTTP (recommended)
 
-Opening `index.html` as a `file://` URL can break **PDF fetch** (CV download), **some video behavior**, and **Formspree**. Use a local server:
+Opening `index.html` as a `file://` URL can still affect some browser behaviors (notably **Formspree** and parts of media loading). CV download includes local-safe fallback behavior, but using a local server is still recommended:
 
 ```bash
 python3 -m http.server 8000
@@ -75,8 +75,10 @@ Media lists and base paths live in `script.js`:
 
 - `CREATIVE_PHOTO_FILES` — files under `assets/photos/`
 - `CREATIVE_VIDEO_FILES` — files under `assets/Videos/`
+- likes state key — `CREATIVE_LIKES_STORAGE_KEY` (stored in `localStorage`)
 
 Add or remove entries to match files on disk (`PHOTO_BASE` / `VIDEO_BASE` are defined next to those lists).
+Likes are tracked by each media `file` id and persisted per browser.
 
 ### CV
 
