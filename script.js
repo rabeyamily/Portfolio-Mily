@@ -1,8 +1,22 @@
-/* ================================================================
-   Portfolio Frontend Controller
-   - Handles visual effects, section interactions, and form submission
-   - Designed for static hosting (no build step required)
-   ================================================================ */
+/**
+ * @file script.js
+ * @description Client-side behavior for the Portfolio-Mily static site. No bundler or framework;
+ *              all modules are plain DOM APIs. Suitable for GitHub Pages or any static host served
+ *              over HTTP(S). Using `file://` may break video, PDF iframes, and some fetch-based flows.
+ *
+ * @section Table of contents
+ * 1. Particle canvas — ambient background animation
+ * 2. Custom cursor — desktop hover affordance (disabled on touch devices via CSS)
+ * 3. Navigation — scroll state, mobile drawer, section→nav active link (IntersectionObserver)
+ * 4. Reveal-on-scroll — `.reveal` / `.visible` for entrance motion
+ * 5. Hero stats — number tick-up when stats enter viewport
+ * 6. CV modal — open/close; `fetch` + blob download for `.js-cv-download` (fallback: open modal)
+ * 7. Projects — tabbed IM vs CS panels, hash sync, expandable project cards
+ * 8. Experiences — expand/collapse extra timeline items
+ * 9. Creative gallery — interleaved photo/video grid, filters, lightbox (photos and videos)
+ * 10. Contact — Formspree AJAX submit
+ * 11. Misc — skill pill hover, anchor smooth scroll, photo error fallback, project card tilt, landing hero motion
+ */
 
 // -----------------------------------------------------------------
 // Particle system: animated ambient background with mouse repulsion.
@@ -12,7 +26,10 @@ const ctx = canvas.getContext('2d');
 let W, H, particles = [], mouse = { x: -9999, y: -9999 };
 const PARTICLE_COUNT = 90;
 
-// Keep the canvas dimensions in lockstep with the viewport.
+/**
+ * Resizes the particle canvas to the current window inner dimensions so drawing coordinates
+ * remain aligned with visible pixels after orientation or window changes.
+ */
 function resizeCanvas() {
   W = canvas.width = window.innerWidth;
   H = canvas.height = window.innerHeight;
@@ -26,14 +43,17 @@ window.addEventListener('mousemove', e => {
 });
 
 const palette = [
-  [124, 92, 252],   // purple
+  [236, 72, 153],   // pink
   [45, 212, 191],   // teal
   [244, 114, 182],  // pink
-  [168, 126, 255],  // lavender
+  [251, 113, 133],  // rose
   [251, 191, 36],   // amber (rare)
 ];
 
-// Single particle lifecycle (spawn -> animate -> recycle).
+/**
+ * One floating particle: respawns when it leaves the frame or exceeds its lifespan.
+ * Color is sampled from the `palette` array; motion includes gentle sine noise and cursor repulsion.
+ */
 class Particle {
   constructor() { this.reset(true); }
   reset(randomY = false) {
@@ -89,12 +109,13 @@ class Particle {
   }
 }
 
+/** Fills the global `particles` array with a fresh set of {@link PARTICLE_COUNT} instances. */
 function initParticles() {
   particles = [];
   for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
 }
 
-// Draw subtle connection lines between nearby particles.
+/** Renders a sparse network graph between particle pairs within `110px` for a tech-mesh look. */
 function drawConnections() {
   for (let i = 0; i < particles.length; i++) {
     for (let j = i + 1; j < particles.length; j++) {
@@ -105,7 +126,7 @@ function drawConnections() {
         const alpha = (1 - dist / 110) * 0.12;
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.strokeStyle = `rgba(124,92,252,1)`;
+        ctx.strokeStyle = `rgba(236,72,153,1)`;
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.moveTo(particles[i].x, particles[i].y);
@@ -117,6 +138,7 @@ function drawConnections() {
   }
 }
 
+/** Main animation loop: clear frame, lines, then update+draw each particle. */
 function animateParticles() {
   ctx.clearRect(0, 0, W, H);
   drawConnections();
@@ -166,9 +188,24 @@ document.querySelectorAll('a, button').forEach(el => {
   });
 });
 
-// Navbar: apply translucent style once scrolling starts.
+// Navbar: stay transparent on landing; tint once past home section.
 const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 20));
+const homeSection = document.getElementById('home');
+
+/**
+ * Adds `.scrolled` to `#navbar` once the user scrolls past the hero, switching the bar to a
+ * solid, blurred background for contrast on lighter sections below the fold.
+ */
+function updateNavbarState() {
+  if (!navbar || !homeSection) return;
+  const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 68;
+  const triggerY = homeSection.offsetTop + homeSection.offsetHeight - navH - 10;
+  navbar.classList.toggle('scrolled', window.scrollY > triggerY);
+}
+
+window.addEventListener('scroll', updateNavbarState);
+window.addEventListener('resize', updateNavbarState);
+updateNavbarState();
 
 // Mobile menu: toggle state and lock page scroll while open.
 const hamburger  = document.getElementById('hamburger');
@@ -186,18 +223,9 @@ document.querySelectorAll('.mob-link, .mob-cv').forEach(l => {
   });
 });
 
-// Active navigation state based on visible section.
-const sections  = document.querySelectorAll('section[id]');
-const navLinks  = document.querySelectorAll('.nav-link');
-new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      const id = e.target.id;
-      navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === `#${id}`));
-    }
-  });
-}, { rootMargin: '-40% 0px -55% 0px' }).observe.bind(null);
-
+/* When a section occupies the middle band of the viewport, mark its matching `.nav-link` as `.active`. */
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
 const sectObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
@@ -208,7 +236,7 @@ const sectObs = new IntersectionObserver(entries => {
 }, { rootMargin: '-40% 0px -55% 0px' });
 sections.forEach(s => sectObs.observe(s));
 
-// Reveal-on-scroll animation trigger.
+// Elements with `.reveal` get `.visible` once ~8% in view; unobserved after first trigger (one-shot).
 const revealObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
@@ -216,7 +244,10 @@ const revealObs = new IntersectionObserver(entries => {
 }, { threshold: 0.08, rootMargin: '0px 0px -50px 0px' });
 document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
-// Increment animated metrics when hero stats enter view.
+/**
+ * Eases a numeric stat (from `data-target`) upward for a short count-up effect.
+ * @param {HTMLElement} el Element with class `.stat-num` and `data-target` integer.
+ */
 function animateCounter(el) {
   const target = parseInt(el.dataset.target);
   let current = 0;
@@ -239,53 +270,228 @@ const statsObs = new IntersectionObserver(entries => {
 const heroStats = document.querySelector('.hero-stats');
 if (heroStats) statsObs.observe(heroStats);
 
-// CV modal open/close behavior and fallback handling.
+// -----------------------------------------------------------------
+// CV modal: `openCV` from About/Contact; backdrop click, Escape, and iframe `error` → fallback CTA
+// -----------------------------------------------------------------
 const cvBackdrop = document.getElementById('cv-modal-backdrop');
 const cvClose    = document.getElementById('cv-modal-close');
 const cvIframe   = document.getElementById('cv-iframe');
 const cvFallback = document.getElementById('cv-fallback');
 
 function openCV() {
+  if (!cvBackdrop) return;
   cvBackdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
-  cvFallback.classList.remove('show');
+  if (cvFallback) cvFallback.classList.remove('show');
 }
 function closeCV() {
+  if (!cvBackdrop) return;
   cvBackdrop.classList.remove('open');
   document.body.style.overflow = '';
-  cvFallback.classList.remove('show');
+  if (cvFallback) cvFallback.classList.remove('show');
 }
 
-// Some browsers fail silently on iframe PDF rendering; rely on error event for fallback only.
-cvIframe.addEventListener('error', () => cvFallback.classList.add('show'));
+/** Fetched as bytes, then `blob:` + `download` so the file saves as rabeya-cv.pdf. */
+const CV_DOWNLOAD_FILENAME = 'rabeya-cv.pdf';
+const CV_SOURCE_PATH = 'cv/Mily_s_Resume__SWE_.pdf';
 
-document.getElementById('btn-cv-view-about').addEventListener('click', openCV);
-document.getElementById('btn-cv-view-contact').addEventListener('click', openCV);
-cvClose.addEventListener('click', closeCV);
-cvBackdrop.addEventListener('click', e => { if (e.target === cvBackdrop) closeCV(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCV(); closeLightbox(); } });
-
-// Projects list expansion/collapse.
-const btnProjects  = document.getElementById('btn-projects-toggle');
-const extraProjects = document.querySelectorAll('.project-card.extra');
-let projectsOpen   = false;
-
-btnProjects.addEventListener('click', () => {
-  projectsOpen = !projectsOpen;
-  btnProjects.classList.toggle('active', projectsOpen);
-  if (projectsOpen) {
-    btnProjects.innerHTML = 'Show Less <span class="toggle-icon" style="display:inline-block;transform:rotate(180deg)">↓</span>';
-    extraProjects.forEach((c, i) => {
-      setTimeout(() => { c.classList.add('shown'); c.style.opacity='1'; c.style.transform='none'; }, i * 80);
-    });
-  } else {
-    btnProjects.innerHTML = 'View All <span class="toggle-icon">↓</span>';
-    extraProjects.forEach(c => c.classList.remove('shown'));
-    document.getElementById('projects').scrollIntoView({ behavior: 'smooth', block: 'start' });
+function saveCvBlobInPlace(blob) {
+  if (typeof navigator !== 'undefined' && typeof navigator.msSaveOrOpenBlob === 'function') {
+    try {
+      navigator.msSaveOrOpenBlob(blob, CV_DOWNLOAD_FILENAME);
+      return;
+    } catch (_) { /* continue with <a download> */ }
   }
+  const objUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = objUrl;
+  a.download = CV_DOWNLOAD_FILENAME;
+  a.setAttribute('download', CV_DOWNLOAD_FILENAME);
+  a.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // Revoke only after the browser has time to start the download (long revoke avoids broken saves).
+  setTimeout(() => URL.revokeObjectURL(objUrl), 15_000);
+}
+
+/**
+ * Attempts a plain browser-native file download via `<a download>`.
+ * This path is critical for `file://` usage where `fetch` is usually blocked.
+ * @param {HTMLAnchorElement | null} sourceAnchor Triggered CV link, if available.
+ */
+function triggerNativeCvDownload(sourceAnchor) {
+  const sourceHref = sourceAnchor?.getAttribute('href') || CV_SOURCE_PATH;
+  const directUrl = new URL(sourceHref, window.location.href).href;
+  const a = document.createElement('a');
+  a.href = directUrl;
+  a.download = CV_DOWNLOAD_FILENAME;
+  a.setAttribute('download', CV_DOWNLOAD_FILENAME);
+  a.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/**
+ * Intercepts CV anchor clicks, loads the PDF with `fetch`, and saves via a blob + `<a download>`.
+ * Falls back to native browser download when `fetch` is unavailable/blocked.
+ * @param {MouseEvent} ev Click event from an `a.js-cv-download` control.
+ */
+async function forceCvDownload(ev) {
+  const anchor = ev.currentTarget instanceof HTMLAnchorElement ? ev.currentTarget : null;
+  const protocol = window.location.protocol;
+  const isWebProtocol = protocol === 'http:' || protocol === 'https:';
+  ev.preventDefault();
+  // For local previews (file://), skip fetch and force native save flow without navigation.
+  if (!isWebProtocol) {
+    try {
+      triggerNativeCvDownload(anchor);
+    } catch {
+      openCV();
+    }
+    return;
+  }
+
+  const cvUrl = new URL(anchor?.getAttribute('href') || CV_SOURCE_PATH, window.location.href).href;
+  try {
+    const res = await fetch(cvUrl, { credentials: 'same-origin', cache: 'no-store' });
+    if (!res.ok) throw new Error(`CV HTTP ${res.status}`);
+    const buf = await res.arrayBuffer();
+    if (!buf || buf.byteLength === 0) throw new Error('CV empty');
+    // octet-stream nudges more browsers to save instead of hand off to a PDF viewer
+    const blob = new Blob([buf], { type: 'application/octet-stream' });
+    saveCvBlobInPlace(blob);
+  } catch {
+    try {
+      triggerNativeCvDownload(anchor);
+    } catch {
+      openCV();
+    }
+  }
+}
+
+document.querySelectorAll('a.js-cv-download').forEach(a => {
+  a.addEventListener('click', forceCvDownload);
 });
 
-// Experience timeline expansion/collapse.
+// Some browsers fail silently on iframe PDF rendering; rely on error event for fallback only.
+if (cvIframe) {
+  cvIframe.addEventListener('error', () => { if (cvFallback) cvFallback.classList.add('show'); });
+}
+
+const btnCvViewAbout = document.getElementById('btn-cv-view-about');
+const btnCvViewContact = document.getElementById('btn-cv-view-contact');
+if (btnCvViewAbout) btnCvViewAbout.addEventListener('click', openCV);
+if (btnCvViewContact) btnCvViewContact.addEventListener('click', openCV);
+if (cvClose) cvClose.addEventListener('click', closeCV);
+if (cvBackdrop) {
+  cvBackdrop.addEventListener('click', e => { if (e.target === cvBackdrop) closeCV(); });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCV(); closeLightbox(); } });
+
+// Projects: IM / CS tabs (slide) + expandable grids.
+const projectsTrack = document.getElementById('projects-panels-track');
+const tabProjectsIm = document.getElementById('tab-projects-im');
+const tabProjectsCs = document.getElementById('tab-projects-cs');
+const panelProjectsIm = document.getElementById('im-projects');
+const panelProjectsCs = document.getElementById('cs-projects');
+
+/**
+ * Switches the Projects area between Interactive Media and CS & HCI: slides the
+ * track via `data-active`, updates ARIA on tabs/panels, and applies `inert` to the hidden column.
+ * @param {'im'|'cs'} which Active project category.
+ */
+function setProjectTab(which) {
+  if (!projectsTrack || !tabProjectsIm || !tabProjectsCs || !panelProjectsIm || !panelProjectsCs) return;
+  const isIm = which === 'im';
+  projectsTrack.setAttribute('data-active', isIm ? 'im' : 'cs');
+  tabProjectsIm.setAttribute('aria-selected', isIm ? 'true' : 'false');
+  tabProjectsCs.setAttribute('aria-selected', isIm ? 'false' : 'true');
+  tabProjectsIm.tabIndex = isIm ? 0 : -1;
+  tabProjectsCs.tabIndex = isIm ? -1 : 0;
+  panelProjectsIm.setAttribute('aria-hidden', isIm ? 'false' : 'true');
+  panelProjectsCs.setAttribute('aria-hidden', isIm ? 'true' : 'false');
+  if (isIm) {
+    panelProjectsIm.removeAttribute('inert');
+    panelProjectsCs.setAttribute('inert', '');
+  } else {
+    panelProjectsIm.setAttribute('inert', '');
+    panelProjectsCs.removeAttribute('inert');
+  }
+}
+
+if (tabProjectsIm && tabProjectsCs) {
+  tabProjectsIm.addEventListener('click', () => setProjectTab('im'));
+  tabProjectsCs.addEventListener('click', () => setProjectTab('cs'));
+  const tabList = tabProjectsIm.parentElement;
+  if (tabList) {
+    tabList.addEventListener('keydown', (e) => {
+      if (!e.target || !e.target.classList?.contains('projects-type-tab')) return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      if (e.key === 'ArrowRight') {
+        setProjectTab('cs');
+        tabProjectsCs?.focus();
+      } else {
+        setProjectTab('im');
+        tabProjectsIm?.focus();
+      }
+    });
+  }
+  const syncProjectHash = () => {
+    if (location.hash === '#cs-projects') setProjectTab('cs');
+    else if (location.hash === '#im-projects') setProjectTab('im');
+  };
+  syncProjectHash();
+  window.addEventListener('hashchange', syncProjectHash);
+}
+
+// Projects: expand/collapse extra cards (IM + CS).
+const imGrid = document.getElementById('im-projects-grid');
+const csGrid = document.getElementById('cs-projects-grid');
+const extraIm = () => (imGrid ? imGrid.querySelectorAll('.project-card.extra') : []);
+const extraCs = () => (csGrid ? csGrid.querySelectorAll('.project-card.extra') : []);
+
+const PROJECT_TOGGLE_OPEN =
+  'Show less <span class="toggle-icon" style="display:inline-block;transform:rotate(180deg)">↓</span>';
+
+/**
+ * Binds a “View more / View all” control to show `.project-card.extra` rows with a staggered reveal.
+ * @param {HTMLButtonElement | null} button
+ * @param {() => NodeListOf<Element>} getExtraCards Returns hidden cards for this grid
+ * @param {string} labelClosed Button label when the extra rows are collapsed
+ * @param {string} scrollSectionId `id` of a section to scroll to when closing (keeps context in view)
+ */
+function bindProjectExtraToggle(button, getExtraCards, labelClosed, scrollSectionId) {
+  if (!button) return;
+  let open = false;
+  button.addEventListener('click', () => {
+    open = !open;
+    button.classList.toggle('active', open);
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    const cards = getExtraCards();
+    if (open) {
+      button.innerHTML = PROJECT_TOGGLE_OPEN;
+      cards.forEach((c, i) => {
+        setTimeout(() => {
+          c.classList.add('shown');
+          c.style.opacity = '1';
+          c.style.transform = 'none';
+        }, i * 80);
+      });
+    } else {
+      button.innerHTML = `${labelClosed} <span class="toggle-icon">↓</span>`;
+      cards.forEach(c => c.classList.remove('shown'));
+      document.getElementById(scrollSectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+
+bindProjectExtraToggle(document.getElementById('btn-im-projects-toggle'), extraIm, 'View more', 'im-projects');
+bindProjectExtraToggle(document.getElementById('btn-cs-projects-toggle'), extraCs, 'View all', 'cs-projects');
+
+// Experiences timeline expansion/collapse.
 const btnExp   = document.getElementById('btn-exp-toggle');
 const extraExp = document.querySelectorAll('.exp-item.extra');
 let expOpen    = false;
@@ -303,110 +509,211 @@ btnExp.addEventListener('click', () => {
   }
 });
 
-// Lightbox for photography items in the creative section.
-const lightbox    = document.getElementById('lightbox');
-const lbImg       = document.getElementById('lightbox-img');
-const lbCaption   = document.getElementById('lightbox-caption');
-const lbClose     = document.getElementById('lightbox-close');
-const lbPrev      = document.getElementById('lightbox-prev');
-const lbNext      = document.getElementById('lightbox-next');
+// -----------------------------------------------------------------
+// Creative lightbox: visible photo + video cards in grid order; `lbIndex` matches that list
+// -----------------------------------------------------------------
+const lightbox = document.getElementById('lightbox');
+const lbImg = document.getElementById('lightbox-img');
+const lbVideo = document.getElementById('lightbox-video');
+const lbCaption = document.getElementById('lightbox-caption');
+const lbClose = document.getElementById('lightbox-close');
+const lbPrev = document.getElementById('lightbox-prev');
+const lbNext = document.getElementById('lightbox-next');
 let lightboxItems = [];
-let lbIndex       = 0;
+let lbIndex = 0;
 
-// Rebuild the photo list from visible DOM items to stay in sync with filters.
+/**
+ * @returns {HTMLElement[]} Non-hidden `.creative-item` nodes in current DOM order (after filters)
+ */
+function getVisibleCreativeItems() {
+  const grid = document.getElementById('creative-grid');
+  if (!grid) return [];
+  return Array.from(grid.querySelectorAll('.creative-item')).filter(el => !el.classList.contains('hidden'));
+}
+
+/**
+ * Populates `lightboxItems` from visible photo and video items (filter + “View all” state).
+ * Called on each open so prev/next and indices match what the user sees.
+ */
 function buildLightboxList() {
   lightboxItems = [];
-  document.querySelectorAll('.creative-item.photo').forEach(item => {
-    const img  = item.querySelector('img');
-    const cap  = item.querySelector('.creative-caption');
-    const src  = img && img.style.display !== 'none' ? img.src : null;
-    const ph   = item.querySelector('.creative-placeholder span');
-    lightboxItems.push({
-      src: src || '',
-      caption: cap ? cap.textContent : '',
-      placeholder: ph ? ph.textContent : ''
-    });
+  getVisibleCreativeItems().forEach(item => {
+    const cap = item.querySelector('.creative-caption');
+    const caption = cap ? cap.textContent : '';
+    if (item.classList.contains('photo')) {
+      const img = item.querySelector('img');
+      const ph = item.querySelector('.creative-placeholder span');
+      const src = img && img.style.display !== 'none' && img.getAttribute('src') ? img.src : '';
+      lightboxItems.push({
+        kind: 'photo',
+        src: src || '',
+        caption,
+        placeholder: ph ? ph.textContent : '',
+      });
+    } else if (item.classList.contains('video')) {
+      const v = item.querySelector('video.creative-video');
+      const src = v ? (v.currentSrc || v.getAttribute('src') || '') : '';
+      lightboxItems.push({ kind: 'video', src: src || '', caption });
+    }
   });
 }
 
-function openLightbox(index) {
+function resetLightboxVideo() {
+  if (!lbVideo) return;
+  lbVideo.pause();
+  lbVideo.removeAttribute('src');
+  lbVideo.load();
+  lbVideo.style.display = 'none';
+}
+
+function resetLightboxImage() {
+  if (!lbImg) return;
+  lbImg.removeAttribute('src');
+  lbImg.removeAttribute('alt');
+  lbImg.style.display = 'none';
+}
+
+/**
+ * @param {HTMLElement} item A `.creative-item` that is currently visible
+ */
+function openLightboxForElement(item) {
   buildLightboxList();
-  lbIndex = index;
+  const visible = getVisibleCreativeItems();
+  const idx = visible.indexOf(item);
+  if (idx < 0 || lightboxItems.length === 0) return;
+  document.querySelectorAll('#creative-grid .creative-item.video video').forEach(v => {
+    v.pause();
+    v.removeAttribute('controls');
+  });
+  lbIndex = idx;
   showLightboxItem();
   lightbox.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+
 function closeLightbox() {
+  resetLightboxVideo();
+  resetLightboxImage();
   lightbox.classList.remove('open');
   document.body.style.overflow = '';
 }
+
 function showLightboxItem() {
   const item = lightboxItems[lbIndex];
   if (!item) return;
-  if (item.src) {
-    lbImg.src = item.src;
-    lbImg.style.display = 'block';
+  if (item.kind === 'video') {
+    resetLightboxImage();
+    if (item.src && lbVideo) {
+      lbVideo.style.display = 'block';
+      lbVideo.src = item.src;
+      setupCreativeVideoEl(lbVideo);
+      lbVideo.controls = true;
+      const tryPlay = () => {
+        lbVideo.play().catch(() => {
+          lbVideo.muted = true;
+          lbVideo.play().catch(() => {});
+        });
+      };
+      if (lbVideo.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) tryPlay();
+      else {
+        const once = () => {
+          lbVideo.removeEventListener('loadeddata', once);
+          lbVideo.removeEventListener('canplay', once);
+          tryPlay();
+        };
+        lbVideo.addEventListener('loadeddata', once);
+        lbVideo.addEventListener('canplay', once);
+      }
+    } else if (lbVideo) {
+      lbVideo.style.display = 'none';
+    }
   } else {
-    lbImg.style.display = 'none';
+    resetLightboxVideo();
+    if (item.src) {
+      lbImg.src = item.src;
+      lbImg.alt = item.caption || '';
+      lbImg.style.display = 'block';
+    } else {
+      resetLightboxImage();
+    }
   }
-  lbCaption.textContent = item.caption;
+  lbCaption.textContent = item.caption || '';
 }
 
-lbClose.addEventListener('click', closeLightbox);
-lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
-lbPrev.addEventListener('click', () => {
-  lbIndex = (lbIndex - 1 + lightboxItems.length) % lightboxItems.length;
-  showLightboxItem();
-});
-lbNext.addEventListener('click', () => {
-  lbIndex = (lbIndex + 1) % lightboxItems.length;
-  showLightboxItem();
-});
-document.addEventListener('keydown', e => {
-  if (!lightbox.classList.contains('open')) return;
-  if (e.key === 'ArrowLeft')  { lbIndex = (lbIndex - 1 + lightboxItems.length) % lightboxItems.length; showLightboxItem(); }
-  if (e.key === 'ArrowRight') { lbIndex = (lbIndex + 1) % lightboxItems.length; showLightboxItem(); }
-});
+if (lightbox) {
+  lbClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+  lbPrev.addEventListener('click', () => {
+    lbIndex = (lbIndex - 1 + lightboxItems.length) % lightboxItems.length;
+    showLightboxItem();
+  });
+  lbNext.addEventListener('click', () => {
+    lbIndex = (lbIndex + 1) % lightboxItems.length;
+    showLightboxItem();
+  });
+  document.addEventListener('keydown', e => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeLightbox();
+      return;
+    }
+    if (e.key === 'ArrowLeft') { lbIndex = (lbIndex - 1 + lightboxItems.length) % lightboxItems.length; showLightboxItem(); }
+    if (e.key === 'ArrowRight') { lbIndex = (lbIndex + 1) % lightboxItems.length; showLightboxItem(); }
+  });
+}
 
 // Creative gallery manifests (one entry per local media file).
 const PHOTO_BASE = 'assets/photos';
 const VIDEO_BASE = 'assets/Videos';
 
-// Encode filenames safely so spaces and special characters resolve correctly.
+/**
+ * @param {string} base e.g. `assets/photos` or `assets/Videos` (no trailing slash)
+ * @param {string} filename Raw file name; segment-encoded for URL safety
+ * @returns {string} Resolvable path relative to the site root
+ */
 function creativeMediaSrc(base, filename) {
   return `${base}/${encodeURIComponent(filename)}`;
+}
+
+/**
+ * Ensures inline playback on iOS and older WebKit: required for programmatic `play()` after tap.
+ * @param {HTMLVideoElement} video
+ */
+function setupCreativeVideoEl(video) {
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
 }
 
 /** Keep in sync with files in assets/photos (add one object per image). */
 const CREATIVE_PHOTO_FILES = [
   { file: '20250715_1314_HALA Logo Blueprint_remix_01k07h2t6vevrtp6nrevdr4map.png', caption: 'HALA — logo blueprint', tall: true },
-  { file: 'IM-2.png', caption: 'Interactive media' },
-  { file: 'IMG_5494.jpg', caption: 'IMG 5494' },
-  { file: 'IMG_7316.jpg', caption: 'IMG 7316' },
-  { file: 'Mily_Week4-2_D&P1.JPG', caption: 'Design & Production — week 4' },
-  { file: 'Mily_Week5_D&P1.JPG', caption: 'Design & Production — week 5', tall: true },
+  { file: 'IM-2.png', caption: '' },
+  { file: 'IMG_5494.jpg', caption: 'Aurroa' },
+  { file: 'IMG_7316.jpg', caption: 'London' },
+  { file: 'Mily_Week4-2_D&P1.JPG', caption: 'Design & Production' },
+  { file: 'Mily_Week5_D&P1.JPG', caption: 'Design & Production — Charcoal work', tall: true },
   { file: 'blossom.jpg', caption: 'Blossom' },
   { file: 'bruges.jpg', caption: 'Bruges' },
   { file: 'eiffel.jpg', caption: 'Eiffel Tower' },
-  { file: 'flower1.jpg', caption: 'Flowers I', tall: true },
-  { file: 'flower2.jpg', caption: 'Flowers II' },
-  { file: 'flower3.jpg', caption: 'Flowers III' },
+  { file: 'flower1.jpg', caption: 'Keukenhof', tall: true },
+  { file: 'flower2.jpg', caption: 'Netherlands' },
   { file: 'food1.jpg', caption: 'Food' },
   { file: 'italy.jpg', caption: 'Italy' },
   { file: 'louvre1.jpg', caption: 'Louvre I', tall: true },
-  { file: 'louvre2.jpg', caption: 'Louvre II' },
   { file: 'milzz_E-Textile_Light-Up_Butterfly_Bracelet_Modern_editorial__68cbbdf7-c533-46f7-a87e-a65ce00ad3ca_0.png', caption: 'E-textile — editorial frame', tall: true },
   { file: 'monalisa.jpg', caption: 'Mona Lisa' },
   { file: 'norway2.jpg', caption: 'Norway' },
   { file: 'painting1.jpg', caption: 'Painting I', tall: true },
-  { file: 'painting2.jpg', caption: 'Painting II' },
+  { file: 'painting2.jpg', caption: 'Landscape' },
 ];
 
 /** Keep in sync with files in assets/Videos (add one object per clip). */
 const CREATIVE_VIDEO_FILES = [
   { file: 'video.mov', caption: 'Edited cut — motion & rhythm' },
   { file: 'baking.mov', caption: 'Baking — short form' },
-  { file: 'cooking.mov', caption: 'Cooking' },
+  { file: 'cooking.mov', caption: 'Cooking with friends' },
   { file: 'cooking2.mov', caption: 'Cooking II' },
   { file: 'dayvlog.mov', caption: 'Day vlog' },
   { file: 'iguessillgetonaplane.mov', caption: 'I guess I\'ll get on a plane' },
@@ -423,7 +730,10 @@ const CREATIVE_PREVIEW_VIDEOS = 2;
 
 let creativeExpanded = false;
 
-// Apply active filter + preview/expanded state to every gallery item.
+/**
+ * Shows or hides each `.creative-item` based on: (1) filter `all|photo|video`, and (2) whether
+ * “extra” items are allowed when the “All” filter is active (`creativeExpanded` and preview caps).
+ */
 function applyCreativeVisibility() {
   const grid = document.getElementById('creative-grid');
   if (!grid) return;
@@ -457,19 +767,27 @@ function applyCreativeVisibility() {
   }
 }
 
-// Build media cards, wire filters/toggles, and attach per-item behaviors.
+/**
+ * One-time setup: interleaves photo and video entries, builds “social post” card markup, wires
+ * filter buttons, “View all”, and card clicks→shared lightbox (photos and videos).
+ */
 function initCreativeGallery() {
   const grid = document.getElementById('creative-grid');
   if (!grid) return;
 
+  /* Interleave one photo then one video until one list runs out, then drain the remainder (keeps grid visually mixed). */
   const sequence = [];
-  let pi = 0, vi = 0;
+  let pi = 0;
+  let vi = 0;
   while (pi < CREATIVE_PHOTO_FILES.length || vi < CREATIVE_VIDEO_FILES.length) {
     if (pi < CREATIVE_PHOTO_FILES.length) sequence.push({ type: 'photo', ...CREATIVE_PHOTO_FILES[pi++] });
     if (vi < CREATIVE_VIDEO_FILES.length) sequence.push({ type: 'video', ...CREATIVE_VIDEO_FILES[vi++] });
   }
 
-  const playSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  const postIconHeart = '<svg class="creative-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+  const postIconComment = '<svg class="creative-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
+  const postIconSend = '<svg class="creative-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+  const postIconBookmark = '<svg class="creative-post-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 
   let previewPhotoCount = 0;
   let previewVideoCount = 0;
@@ -489,11 +807,20 @@ function initCreativeGallery() {
       wrap.className = `creative-item photo reveal delay-${delayN}`;
       wrap.dataset.type = 'photo';
       wrap.innerHTML = `
-        <img loading="lazy" onerror="this.style.display='none'" alt="" />
-        <div class="creative-placeholder photo-ph"><span>📷</span></div>
-        <div class="creative-overlay">
-          <span class="creative-type-badge">Photography</span>
-          <p class="creative-caption"></p>
+        <div class="creative-post-frame">
+          <div class="creative-post-header">
+            <span class="creative-post-title">Photography</span>
+            <span class="creative-post-dots" aria-hidden="true">⋯</span>
+          </div>
+          <div class="creative-post-media">
+            <img loading="lazy" onerror="this.style.display='none'" alt="" />
+            <div class="creative-placeholder photo-ph"><span>📷</span></div>
+          </div>
+          <div class="creative-post-toolbar" aria-hidden="true">
+            <div class="creative-post-toolbar-left">${postIconHeart}${postIconComment}${postIconSend}</div>
+            <div class="creative-post-toolbar-right">${postIconBookmark}</div>
+          </div>
+          <p class="creative-post-caption creative-caption"></p>
         </div>`;
       const img = wrap.querySelector('img');
       img.src = creativeMediaSrc(PHOTO_BASE, item.file);
@@ -503,17 +830,24 @@ function initCreativeGallery() {
       wrap.className = `creative-item video reveal delay-${delayN}`;
       wrap.dataset.type = 'video';
       wrap.innerHTML = `
-        <video class="creative-video" playsinline preload="metadata"></video>
-        <div class="creative-placeholder video-ph"><span>🎬</span></div>
-        <div class="play-btn-wrap">
-          <div class="play-btn">${playSvg}</div>
-        </div>
-        <div class="creative-overlay">
-          <span class="creative-type-badge video-badge">Videography</span>
-          <p class="creative-caption"></p>
+        <div class="creative-post-frame">
+          <div class="creative-post-header">
+            <span class="creative-post-title">Videography</span>
+            <span class="creative-post-dots" aria-hidden="true">⋯</span>
+          </div>
+          <div class="creative-post-media">
+            <video class="creative-video" playsinline preload="metadata"></video>
+            <div class="creative-placeholder video-ph"><span>🎬</span></div>
+          </div>
+          <div class="creative-post-toolbar" aria-hidden="true">
+            <div class="creative-post-toolbar-left">${postIconHeart}${postIconComment}${postIconSend}</div>
+            <div class="creative-post-toolbar-right">${postIconBookmark}</div>
+          </div>
+          <p class="creative-post-caption creative-caption"></p>
         </div>`;
       const video = wrap.querySelector('video');
       video.src = creativeMediaSrc(VIDEO_BASE, item.file);
+      setupCreativeVideoEl(video);
       video.setAttribute('aria-label', item.caption);
       wrap.querySelector('.creative-caption').textContent = item.caption;
     }
@@ -553,35 +887,30 @@ function initCreativeGallery() {
 
   applyCreativeVisibility();
 
-  grid.querySelectorAll('.creative-item.photo').forEach((item, i) => {
-    item.addEventListener('click', () => openLightbox(i));
-  });
-
-  grid.querySelectorAll('.creative-item.video').forEach(item => {
-    const video = item.querySelector('video.creative-video');
-    if (!video) return;
-    item.addEventListener('click', () => {
-      grid.querySelectorAll('.creative-item.video video').forEach(v => {
-        if (v !== video) {
-          v.pause();
-          v.removeAttribute('controls');
-        }
-      });
-      video.setAttribute('controls', '');
-      video.play().catch(() => {});
+  grid.querySelectorAll('.creative-item').forEach(item => {
+    item.addEventListener('click', e => {
+      if (item.classList.contains('hidden')) return;
+      e.preventDefault();
+      openLightboxForElement(item);
     });
   });
 }
 
 initCreativeGallery();
 
-// Contact form submission via Formspree (AJAX).
+// -----------------------------------------------------------------
+// Contact: Formspree endpoint receives POST as `multipart/form-data` (same as native submit).
+// -----------------------------------------------------------------
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mqewgnyb';
-const form       = document.getElementById('contact-form');
-const sendBtn    = document.getElementById('send-btn');
+const form = document.getElementById('contact-form');
+const sendBtn = document.getElementById('send-btn');
 const successMsg = document.getElementById('form-success');
-const errorMsg   = document.getElementById('form-error');
+const errorMsg = document.getElementById('form-error');
 
+/**
+ * Submits the contact form via `fetch` so the page does not navigate away. Formspree returns JSON
+ * with field errors when validation fails; network errors are surfaced in `errorMsg`.
+ */
 form.addEventListener('submit', async e => {
   e.preventDefault();
   if (!form.name.value.trim() || !form.email.value.trim() || !form.message.value.trim()) return;
@@ -624,13 +953,15 @@ form.addEventListener('submit', async e => {
   }
 });
 
-// Supplemental hover lift for skill pills.
+// -----------------------------------------------------------------
+// Skills: subtle inline transform on pill hover (progressive enhancement; no `prefers-reduced-motion` gating)
+// -----------------------------------------------------------------
 document.querySelectorAll('.skill-pill').forEach(p => {
   p.addEventListener('mouseenter', () => p.style.transform = 'translateY(-2px)');
   p.addEventListener('mouseleave', () => p.style.transform = '');
 });
 
-// Smooth anchor navigation with fixed-navbar offset compensation.
+// Same-document `#hash` links: smooth-scroll with offset equal to fixed `--nav-h` to avoid underlap.
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const target = document.querySelector(a.getAttribute('href'));
@@ -641,7 +972,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 
-// Profile image fallback: reveal initials if photo fails to load.
+// About section: if portrait `<img>` errors, show adjacent initials placeholder in `.photo-frame`.
 document.querySelectorAll('.photo-frame img').forEach(img => {
   img.addEventListener('error', function() {
     this.style.display = 'none';
@@ -654,70 +985,7 @@ document.querySelectorAll('.photo-frame img').forEach(img => {
   });
 });
 
-// Mascot eye tracking and blink behavior.
-(() => {
-  const doll = document.getElementById('mily-doll');
-  if (!doll) return;
-  const svg = doll.querySelector('.mily-doll');
-  const pupils = doll.querySelectorAll('.mily-pupil');
-  if (!svg || pupils.length === 0) return;
-
-  // Maximum pupil displacement in SVG coordinate space.
-  const MAX_SHIFT = 3.2;
-  // Baseline pupil centers in the SVG viewBox.
-  const centers = [
-    { x: 115, y: 170 },
-    { x: 185, y: 170 },
-  ];
-
-  let targetX = 0, targetY = 0;
-  let currX = 0, currY = 0;
-  let rafId = null;
-
-  function onMouseMove(e) {
-    const rect = svg.getBoundingClientRect();
-    if (rect.width === 0) return;
-    // Convert pointer position from CSS pixels into SVG coordinates.
-    const vb = svg.viewBox.baseVal;
-    const mx = ((e.clientX - rect.left) / rect.width)  * vb.width;
-    const my = ((e.clientY - rect.top)  / rect.height) * vb.height;
-    // Compute gaze direction from the midpoint between both eyes.
-    const cx = (centers[0].x + centers[1].x) / 2;
-    const cy = (centers[0].y + centers[1].y) / 2;
-    const dx = mx - cx;
-    const dy = my - cy;
-    const dist = Math.hypot(dx, dy) || 1;
-    const scale = Math.min(1, dist / 120); // soften motion for near-cursor positions
-    targetX = (dx / dist) * MAX_SHIFT * scale;
-    targetY = (dy / dist) * MAX_SHIFT * scale;
-    if (!rafId) rafId = requestAnimationFrame(tick);
-  }
-
-  function tick() {
-    currX += (targetX - currX) * 0.22;
-    currY += (targetY - currY) * 0.22;
-    pupils.forEach(p => {
-      p.setAttribute('transform', `translate(${currX.toFixed(2)} ${currY.toFixed(2)})`);
-    });
-    if (Math.abs(targetX - currX) > 0.05 || Math.abs(targetY - currY) > 0.05) {
-      rafId = requestAnimationFrame(tick);
-    } else {
-      rafId = null;
-    }
-  }
-
-  window.addEventListener('mousemove', onMouseMove, { passive: true });
-
-  // Trigger periodic blink to keep the character feeling alive.
-  function blink() {
-    pupils.forEach(p => { p.style.transition = 'transform .15s, opacity .12s'; p.style.opacity = '0'; });
-    setTimeout(() => pupils.forEach(p => { p.style.opacity = '1'; }), 140);
-    setTimeout(blink, 3500 + Math.random() * 4000);
-  }
-  setTimeout(blink, 2500);
-})();
-
-// Pointer-based 3D tilt interaction for project cards.
+// Projects: light 3D tilt on pointer move (resets on leave; complements CSS hover lift).
 document.querySelectorAll('.project-card').forEach(card => {
   card.addEventListener('mousemove', e => {
     const rect = card.getBoundingClientRect();
@@ -733,3 +1001,101 @@ document.querySelectorAll('.project-card').forEach(card => {
     card.style.transition = 'transform .1s, border-color .3s, box-shadow .3s';
   });
 });
+
+// Landing (portfolio hero): parallax on mouse — text block, year, name, and decorative assets share depth.
+const landingHero = document.querySelector('.hero-portfolio');
+const landingPortText = document.querySelector('.hero-portfolio .port-text');
+const landingPhotoWrap = document.getElementById('photoWrap');
+const landingBgWord = document.querySelector('.hero-portfolio .bg-word');
+const landingYearText = document.querySelector('.hero-portfolio .year-text');
+const landingNameBlock = document.querySelector('.hero-portfolio .name-block');
+const landingElements = document.querySelectorAll('.hero-portfolio .hero-element');
+
+/**
+ * @param {Element} element One of `.hero-element-*` icons; preserves their authored rotation in CSS.
+ * @returns {string} A `transform` fragment used when resetting after `mouseleave`
+ */
+function getLandingElementBaseTransform(element) {
+  if (element.classList.contains('hero-element-camera')) return 'rotate(-9deg)';
+  if (element.classList.contains('hero-element-laptop')) return 'rotate(8deg)';
+  if (element.classList.contains('hero-element-clapper')) return 'rotate(-11deg)';
+  if (element.classList.contains('hero-element-code')) return 'rotate(6deg)';
+  return '';
+}
+
+const landingParallaxMedia = window.matchMedia('(min-width: 769px)');
+
+function clearLandingParallaxIfNarrow() {
+  if (landingParallaxMedia.matches) return;
+  if (landingPortText) landingPortText.style.transform = '';
+  if (landingPhotoWrap) landingPhotoWrap.style.transform = '';
+  if (landingBgWord) landingBgWord.style.transform = '';
+  if (landingYearText) landingYearText.style.transform = '';
+  if (landingNameBlock) landingNameBlock.style.transform = '';
+  landingElements.forEach(element => {
+    element.style.transform = getLandingElementBaseTransform(element);
+  });
+}
+if (typeof landingParallaxMedia.addEventListener === 'function') {
+  landingParallaxMedia.addEventListener('change', clearLandingParallaxIfNarrow);
+} else {
+  landingParallaxMedia.addListener(clearLandingParallaxIfNarrow);
+}
+clearLandingParallaxIfNarrow();
+
+if (landingHero && landingPortText && landingPhotoWrap && landingYearText && landingNameBlock) {
+  landingHero.addEventListener('mousemove', e => {
+    if (!landingParallaxMedia.matches) return;
+    const { clientX, clientY, currentTarget } = e;
+    const { width, height, left, top } = currentTarget.getBoundingClientRect();
+    const cx = (clientX - left) / width - 0.5;
+    const cy = (clientY - top) / height - 0.5;
+
+    landingPortText.style.transform = `perspective(900px) rotateY(${cx * 12}deg) rotateX(${-cy * 8}deg) translateZ(20px)`;
+    landingPhotoWrap.style.transform = `translateX(calc(-50% + ${cx * 18}px)) translateY(${cy * 10}px)`;
+    if (landingBgWord) {
+      landingBgWord.style.transform = `translateX(${cx * -30}px) translateY(${cy * -10}px)`;
+    }
+    landingYearText.style.transform = `perspective(600px) rotateY(${cx * 6}deg) rotateX(${-cy * 4}deg)`;
+    landingNameBlock.style.transform = `translateX(${cx * -12}px) translateY(${cy * -6}px)`;
+    landingElements.forEach((element, i) => {
+      const depth = (i + 1) * 8;
+      element.style.transform = `${getLandingElementBaseTransform(element)} translate3d(${cx * depth}px, ${cy * depth}px, 0)`;
+    });
+  });
+
+  landingHero.addEventListener('mouseleave', () => {
+    if (!landingParallaxMedia.matches) {
+      clearLandingParallaxIfNarrow();
+      return;
+    }
+    landingPortText.style.transform = 'perspective(900px) rotateY(0deg) rotateX(0deg) translateZ(0)';
+    landingPhotoWrap.style.transform = 'translateX(-50%) translateY(0)';
+    if (landingBgWord) landingBgWord.style.transform = 'none';
+    landingYearText.style.transform = 'none';
+    landingNameBlock.style.transform = 'none';
+    landingElements.forEach(element => {
+      element.style.transform = getLandingElementBaseTransform(element);
+    });
+  });
+
+  const text = landingPortText.textContent || '';
+  landingPortText.innerHTML = text
+    .split('')
+    .map((ch, i) => `<span class="pl" style="display:inline-block;transition:transform .25s ${i * 0.04}s,color .25s ${i * 0.04}s">${ch}</span>`)
+    .join('');
+
+  landingPortText.addEventListener('mouseenter', () => {
+    landingPortText.querySelectorAll('.pl').forEach((span, i) => {
+      span.style.transform = `translateY(${i % 2 === 0 ? '-8px' : '8px'}) rotate(${(i - 4) * 2}deg)`;
+      span.style.color = '#d9305a';
+    });
+  });
+
+  landingPortText.addEventListener('mouseleave', () => {
+    landingPortText.querySelectorAll('.pl').forEach(span => {
+      span.style.transform = '';
+      span.style.color = '';
+    });
+  });
+}

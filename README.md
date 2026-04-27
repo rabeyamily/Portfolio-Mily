@@ -1,115 +1,104 @@
 # Portfolio-Mily
 
-Personal portfolio website for Rabeya Mily, built with vanilla HTML, CSS, and JavaScript.
+Personal portfolio site for **Rabeya Mily**, built with vanilla HTML, CSS, and JavaScript—no framework and no build step.
 
 ## Overview
 
-This project is a fully static, responsive portfolio site that showcases:
-- academic background
-- projects
-- skills and experience
-- creative photography and videography
-- contact details with a working message form
+A fully static, responsive portfolio that includes:
 
-The site is optimized for static hosting and does not require a build step.
+- Landing hero with animated background, “PORTFOLIO” headline, and portrait
+- About with profile, interest tags, and info cards
+- **Projects** with two tabs: **Interactive Media** and **CS & HCI**; expandable grids on small screens
+- **Skills & experiences** timeline with expand/collapse
+- **Creative** gallery (photos and videos), filters, preview limits, and a shared lightbox
+- **Contact** with Formspree and CV download / “View online”
 
-## Tech Stack
+## Tech stack
 
-- `HTML5`
-- `CSS3` (custom properties, responsive layouts, animations)
-- `Vanilla JavaScript` (UI behavior and interactions)
-- `Formspree` (contact form submission endpoint)
+- HTML5
+- CSS3 (custom properties, responsive layout, animations)
+- Vanilla JavaScript (DOM, fetch, observers, modals)
+- [Formspree](https://formspree.io/) for the contact form
 
-## Key Features
+## Key features
 
-- Responsive desktop/mobile navigation with hamburger menu
-- Hero section with animated particle background and custom cursor
-- Scroll reveal and animated counters
-- CV modal with embedded PDF preview and download fallback
-- Expand/collapse controls for Projects and Experience sections
-- Creative gallery with:
-  - photo/video filters
-  - preview vs. view-all behavior
-  - photo lightbox
-  - inline video playback
-- Contact form with async submission and user-friendly success/error states
+- Responsive nav and mobile drawer; optional custom cursor on desktop
+- Hero: particles, decorative assets, scroll hint, safe parallax on larger viewports
+- Projects: tabbed panels, project cards with links, mobile “View more” where used
+- CV: **Download** loads the PDF with `fetch`, then saves as `rabeya-cv.pdf` via a blob; **View online** opens an in-page modal with the same PDF embedded. Use **http(s)** locally so download works (see below).
+- Creative: interleaved photo/video grid, Instagram-style cards, lightbox carousel
+- Contact: async submit, success/error feedback
 
-## Project Structure
+## Project structure
 
 ```text
 Portfolio-Mily/
-├── index.html          # Page structure and content
-├── style.css           # Visual system, layout, component styles
-├── script.js           # Interactions, animations, and form logic
-├── assets/             # Images, videos, and project thumbnails
-└── cv/                 # CV PDF and related files
+├── index.html          # Single page: sections, CV modal, creative lightbox
+├── style.css           # Global and component styles
+├── script.js           # Navigation, projects, creative, CV, form, hero behavior
+├── assets/             # Images, videos, project thumbnails, hero assets
+└── cv/                 # Resume PDF (see configuration)
 ```
 
-## Getting Started
+## Getting started
 
-### 1) Clone the repository
+### Clone and run locally
 
 ```bash
 git clone https://github.com/rabeyamily/Portfolio-Mily.git
 cd Portfolio-Mily
 ```
 
-### 2) Open locally
+### Serve over HTTP (recommended)
 
-Because this is a static site, you can open `index.html` directly in a browser.
-
-For best consistency, run a simple local server:
+Opening `index.html` as a `file://` URL can break **PDF fetch** (CV download), **some video behavior**, and **Formspree**. Use a local server:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then visit [http://localhost:8000](http://localhost:8000).
+Then open [http://localhost:8000](http://localhost:8000).
 
-## Configuration Notes
+## Configuration
 
-### Contact Form
+### Contact form
 
-The contact form posts to Formspree in `script.js`:
+The form posts to Formspree. In `script.js`, set:
 
 - `FORMSPREE_ENDPOINT`
 
-Update this value if you move to a different Formspree form.
+Change it if you create a new Formspree form.
 
-### Creative Gallery Media
+### Creative gallery
 
-Media entries are defined in `script.js`:
+Media lists and base paths live in `script.js`:
 
-- `CREATIVE_PHOTO_FILES`
-- `CREATIVE_VIDEO_FILES`
+- `CREATIVE_PHOTO_FILES` — files under `assets/photos/`
+- `CREATIVE_VIDEO_FILES` — files under `assets/Videos/`
 
-Add/remove entries there to keep the gallery in sync with files in:
-- `assets/photos`
-- `assets/Videos`
+Add or remove entries to match files on disk (`PHOTO_BASE` / `VIDEO_BASE` are defined next to those lists).
 
-### CV Modal
+### CV
 
-CV links and embedded preview reference:
-- `cv/rabeya-cv.pdf`
+| Item | Location |
+|------|----------|
+| PDF file on disk | `cv/Mily_s_Resume__SWE_.pdf` |
+| Download filename | `rabeya-cv.pdf` (set in `script.js`: `CV_DOWNLOAD_FILENAME`, `CV_SOURCE_PATH`) |
+| HTML references | `index.html`: nav, mobile menu, contact, CV modal `href` / iframe `src` |
 
-If you rename the file, update references in `index.html`.
+If you rename or move the PDF, update `CV_SOURCE_PATH` in `script.js` and all `cv/...` links and the modal iframe `src` in `index.html`.
 
 ## Deployment
 
-This project can be deployed to any static host:
+Works on any static host (GitHub Pages, Vercel, Netlify, Cloudflare Pages, etc.):
 
-- GitHub Pages
-- Vercel
-- Netlify
-- Cloudflare Pages
+- **Build command:** none  
+- **Publish directory:** repository root (same layout as locally)
 
-No build command is required. Publish the repository root as static files.
+Ensure the `cv/` folder and PDF are deployed so download and the modal continue to work.
 
-## Accessibility and UX Notes
+## Accessibility and UX
 
-- Semantic sections and clear navigation structure
-- Keyboard support for modal/lightbox close behavior (`Escape`)
-- Visual feedback for form submission states
-- Responsive layout across common viewport sizes
-
-
+- Semantic sections and landmark-style structure
+- `Escape` closes the CV modal and the creative lightbox where applicable
+- Form submission states and responsive layout across common breakpoints

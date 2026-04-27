@@ -1,4 +1,20 @@
 <!DOCTYPE html>
+<!--
+  index.html — Portfolio-Mily (static single-page site)
+
+  Structure (in document order):
+    1) Global UI: custom cursor, particle canvas, primary nav, mobile drawer, CV modal
+    2) #home     Landing / portfolio hero (imported “files (2)” layout + decorative assets)
+    3) #about    Biography, education cards, interest chips, secondary photo
+    4) #projects Interleaved “Interactive Media” / “CS & HCI” project grids; tabs slide panels; “View more”
+    5) #experiences  Skills + experience list (two columns; “View all” for extra roles)
+    6) #creative  Filter buttons + empty #creative-grid (items injected by script.js)
+    7) #contact  Formspree form, email row, social links, CV link
+    8) Footer    Copyright / back-to-top
+    9) #lightbox Full-screen overlay for creative photos and videos (shared carousel)
+
+  Assets: relative paths (assets/…, cv/…). Serve over http(s) for PDF iframe, video, and form POST.
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -6,7 +22,8 @@
   <title>Mily — Rabeya</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Outfit:wght@500;600;700&family=Bebas+Neue&family=Special+Elite&display=swap" rel="stylesheet">
+  <!-- Single stylesheet: tokens, layout, and component styles (see file header in style.css) -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -35,7 +52,7 @@
         <li><a href="#experiences" class="nav-link">Skills and Experiences</a></li>
         <li><a href="#creative" class="nav-link">Creative</a></li>
         <li><a href="#contact" class="nav-link">Contact</a></li>
-        <li><a href="cv/rabeya-cv.pdf" class="nav-cv" download>Download CV</a></li>
+        <li><a href="cv/Mily_s_Resume__SWE_.pdf" class="nav-cv js-cv-download" download="rabeya-cv.pdf" target="_blank" rel="noopener noreferrer">Download CV</a></li>
       </ul>
       <button class="hamburger" id="hamburger" aria-label="Toggle menu">
         <span></span><span></span><span></span>
@@ -52,7 +69,7 @@
       <li><a href="#experiences" class="mob-link">Skills and Experiences</a></li>
       <li><a href="#creative" class="mob-link">Creative</a></li>
       <li><a href="#contact" class="mob-link">Contact</a></li>
-      <li><a href="cv/rabeya-cv.pdf" class="mob-cv" download>Download CV ↓</a></li>
+      <li><a href="cv/Mily_s_Resume__SWE_.pdf" class="mob-cv js-cv-download" download="rabeya-cv.pdf" target="_blank" rel="noopener noreferrer">Download CV ↓</a></li>
     </ul>
   </div>
 
@@ -62,177 +79,57 @@
       <div class="cv-modal-header">
         <span class="cv-modal-title">Rabeya — Curriculum Vitae</span>
         <div class="cv-modal-actions">
-          <a href="cv/rabeya-cv.pdf" class="cv-modal-dl" download>Download ↓</a>
+          <a href="cv/Mily_s_Resume__SWE_.pdf" class="cv-modal-dl js-cv-download" download="rabeya-cv.pdf" target="_blank" rel="noopener noreferrer">Download ↓</a>
           <button class="cv-modal-close" id="cv-modal-close">✕</button>
         </div>
       </div>
       <div class="cv-modal-body">
-        <iframe src="cv/rabeya-cv.pdf#toolbar=0" id="cv-iframe" title="Rabeya CV"></iframe>
+        <!-- PDF frags: view=FitH fits page width in the embed (avoids “whole page = tiny” default) -->
+        <iframe src="cv/Mily_s_Resume__SWE_.pdf#toolbar=0&navpanes=0&view=FitH" id="cv-iframe" title="Rabeya CV"></iframe>
         <div class="cv-fallback" id="cv-fallback">
           <p>PDF preview not available in your browser.</p>
-          <a href="cv/rabeya-cv.pdf" class="btn-primary" download>Download CV Instead</a>
+          <a href="cv/Mily_s_Resume__SWE_.pdf" class="btn-primary js-cv-download" download="rabeya-cv.pdf" target="_blank" rel="noopener noreferrer">Download CV Instead</a>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Home / Hero section -->
-  <section id="home" class="section hero-section">
-    <div class="hero-orb hero-orb-1"></div>
-    <div class="hero-orb hero-orb-2"></div>
-    <div class="hero-orb hero-orb-3"></div>
-    <span class="hero-float">{ code }</span>
-    <span class="hero-float">CS · Econ · IM</span>
-    <span class="hero-float">NYUAD '26</span>
+  <section id="home" class="section hero-section hero-portfolio">
+    <div class="hero-creative-layer" aria-hidden="true">
+      <img class="hero-element hero-element-camera" src="assets/landing%20page%20elements/1.png" alt="" />
+      <img class="hero-element hero-element-laptop" src="assets/landing%20page%20elements/2.png" alt="" />
+      <img class="hero-element hero-element-clapper" src="assets/landing%20page%20elements/3.png" alt="" />
+      <img class="hero-element hero-element-code" src="assets/landing%20page%20elements/4.png" alt="" />
+    </div>
 
-    <div class="hero-content">
-      <div class="hero-text">
-        <p class="hero-eyebrow reveal">NYUAD '26 &nbsp;·&nbsp; Abu Dhabi, UAE</p>
-        <h1 class="hero-heading reveal delay-1">Hi, I'm <em>Rabeya Mily</em></h1>
-        <p class="hero-sub reveal delay-2">Senior at NYU Abu Dhabi — building at the intersection of technology, economics, and creative media. I also see the world through a lens.</p>
-        <div class="hero-tags reveal delay-3">
-          <span class="hero-tag">Computer Science</span>
-          <span class="hero-tag">Economics</span>
-          <span class="hero-tag">Interactive Media</span>
-          <span class="hero-tag hero-tag-cam"> Creativity</span>
-        </div>
-        <div class="hero-ctas reveal delay-4">
-          <a href="#projects" class="btn-primary">View my work</a>
-          <a href="#contact" class="btn-secondary">Get in Touch</a>
-          <a href="cv/rabeya-cv.pdf" class="btn-ghost" download>Download CV ↓</a>
-        </div>
-      </div>
-      <div class="hero-photo reveal delay-2">
-        <div class="photo-glow"></div>
-        <div class="photo-frame">
-          <img src="assets/myself/mily.jpg" alt="Rabeya" onerror="this.style.display='none'" />
-          <div class="photo-initials">R</div>
-        </div>
-        <div class="photo-deco"></div>
-        <div class="photo-deco2"></div>
+    <div class="portfolio-wrap">
+      <h1 class="port-text">PORTFOLIO</h1>
+    </div>
 
-        <!-- Interactive SVG mascot with pupil tracking and blink animation -->
-        <div class="mily-doll-wrap" id="mily-doll">
-          <svg class="mily-doll" viewBox="0 0 300 360" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <radialGradient id="cheekGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#f4a7b9" stop-opacity=".9"/>
-                <stop offset="100%" stop-color="#f4a7b9" stop-opacity="0"/>
-              </radialGradient>
-            </defs>
+    <div class="photo-wrap" id="photoWrap">
+      <div class="photo-glow"></div>
+      <img class="hero-photo" src="assets/myself/2.png" alt="Rabeya portrait" onerror="this.style.display='none'" />
+    </div>
 
-            <!-- Torso / shirt base -->
-            <path d="M 55 340 Q 55 260 100 245 Q 125 255 150 255 Q 175 255 200 245 Q 245 260 245 340 Z"
-                  fill="#f5d76e" stroke="#3d2a1e" stroke-width="3" stroke-linejoin="round"/>
-            <!-- Shirt fold detail -->
-            <path d="M 150 265 Q 140 300 150 335" stroke="#3d2a1e" stroke-width="1.5" fill="none" opacity=".35"/>
-
-            <!-- Collar detail -->
-            <path d="M 95 245 Q 110 258 125 248 Q 140 260 155 248 Q 170 260 185 248 Q 200 260 210 245 Q 180 268 150 268 Q 120 268 95 245 Z"
-                  fill="#f4a7b9" stroke="#3d2a1e" stroke-width="2.5" stroke-linejoin="round"/>
-
-            <!-- Arms wrapping the laptop -->
-            <path d="M 82 268 Q 78 300 92 322 L 104 322 Q 100 300 104 278 Z"
-                  fill="#fce4c4" stroke="#3d2a1e" stroke-width="2.5" stroke-linejoin="round"/>
-            <path d="M 218 268 Q 222 300 208 322 L 196 322 Q 200 300 196 278 Z"
-                  fill="#fce4c4" stroke="#3d2a1e" stroke-width="2.5" stroke-linejoin="round"/>
-
-            <!-- Laptop assembly -->
-            <!-- Screen (slightly tilted back) -->
-            <path d="M 98 278 L 202 278 L 210 308 L 90 308 Z"
-                  fill="#2a2f4a" stroke="#3d2a1e" stroke-width="2.5" stroke-linejoin="round"/>
-            <!-- Screen interior -->
-            <path d="M 104 282 L 196 282 L 203 304 L 97 304 Z"
-                  fill="#6fb0c9" stroke="#3d2a1e" stroke-width="1.5" stroke-linejoin="round"/>
-            <!-- Decorative code strokes -->
-            <g stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity=".85">
-              <path d="M 112 288 L 138 288"/>
-              <path d="M 142 288 L 160 288"/>
-              <path d="M 112 294 L 128 294"/>
-              <path d="M 132 294 L 170 294"/>
-              <path d="M 112 300 L 150 300"/>
-            </g>
-            <!-- Specular highlight on display -->
-            <path d="M 108 284 L 118 284 L 114 302 L 104 302 Z" fill="#ffffff" opacity=".12"/>
-            <!-- Laptop base / keyboard deck -->
-            <path d="M 86 308 L 214 308 Q 220 322 212 328 L 88 328 Q 80 322 86 308 Z"
-                  fill="#c9ced8" stroke="#3d2a1e" stroke-width="2.5" stroke-linejoin="round"/>
-            <!-- Trackpad detail -->
-            <rect x="135" y="316" width="30" height="5" rx="1.5" fill="#3d2a1e" opacity=".25"/>
-
-            <!-- Rear hair silhouette -->
-            <path d="M 58 180 Q 45 90 120 55 Q 150 42 180 55 Q 255 90 242 185 Q 250 230 225 245 Q 215 235 210 215 Q 215 185 205 168 L 95 168 Q 85 185 90 215 Q 85 235 75 245 Q 50 230 58 180 Z"
-                  fill="#8b5a3c" stroke="#3d2a1e" stroke-width="3" stroke-linejoin="round"/>
-
-            <!-- Face base -->
-            <ellipse cx="150" cy="170" rx="78" ry="82" fill="#fce4c4" stroke="#3d2a1e" stroke-width="3"/>
-
-            <!-- Ears and earring marks -->
-            <ellipse cx="70" cy="175" rx="12" ry="16" fill="#fce4c4" stroke="#3d2a1e" stroke-width="2.5"/>
-            <ellipse cx="230" cy="175" rx="12" ry="16" fill="#fce4c4" stroke="#3d2a1e" stroke-width="2.5"/>
-            <path d="M 64 170 L 74 180 M 74 170 L 64 180" stroke="#3d2a1e" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M 224 170 L 234 180 M 234 170 L 224 180" stroke="#3d2a1e" stroke-width="1.8" stroke-linecap="round"/>
-
-            <!-- Front hair / bangs -->
-            <path d="M 75 155 Q 65 95 115 72 Q 140 60 165 70 Q 215 85 225 160 Q 215 135 190 128 Q 170 118 148 125 Q 120 120 100 135 Q 82 142 75 155 Z"
-                  fill="#8b5a3c" stroke="#3d2a1e" stroke-width="3" stroke-linejoin="round"/>
-            <!-- Hair tuft -->
-            <path d="M 140 56 Q 148 38 158 52" fill="#8b5a3c" stroke="#3d2a1e" stroke-width="2.5" stroke-linejoin="round"/>
-
-            <!-- Cheek tint and blush strokes -->
-            <ellipse cx="95" cy="200" rx="16" ry="10" fill="url(#cheekGrad)"/>
-            <ellipse cx="205" cy="200" rx="16" ry="10" fill="url(#cheekGrad)"/>
-            <g stroke="#b46a7a" stroke-width="1.4" stroke-linecap="round" opacity=".75">
-              <path d="M 85 197 L 90 202"/>
-              <path d="M 94 196 L 99 201"/>
-              <path d="M 103 197 L 108 202"/>
-              <path d="M 195 197 L 200 202"/>
-              <path d="M 204 196 L 209 201"/>
-              <path d="M 213 197 L 218 202"/>
-            </g>
-
-            <!-- Glasses frame -->
-            <circle cx="115" cy="170" r="26" fill="#ffffff" fill-opacity=".25" stroke="#3d2a1e" stroke-width="3"/>
-            <circle cx="185" cy="170" r="26" fill="#ffffff" fill-opacity=".25" stroke="#3d2a1e" stroke-width="3"/>
-            <path d="M 141 168 Q 150 164 159 168" stroke="#3d2a1e" stroke-width="3" fill="none" stroke-linecap="round"/>
-
-            <!-- Eye whites used as pupil bounds -->
-            <circle cx="115" cy="170" r="10" fill="#ffffff"/>
-            <circle cx="185" cy="170" r="10" fill="#ffffff"/>
-
-            <!-- Pupils translated at runtime by JavaScript -->
-            <g class="mily-pupil mily-pupil-left">
-              <circle cx="115" cy="170" r="5.5" fill="#2a1a10"/>
-              <circle cx="113.5" cy="168.5" r="1.5" fill="#ffffff"/>
-            </g>
-            <g class="mily-pupil mily-pupil-right">
-              <circle cx="185" cy="170" r="5.5" fill="#2a1a10"/>
-              <circle cx="183.5" cy="168.5" r="1.5" fill="#ffffff"/>
-            </g>
-
-            <!-- Nose -->
-            <path d="M 145 188 L 150 202 L 155 188 Z" fill="#f0c59a" stroke="#3d2a1e" stroke-width="1.8" stroke-linejoin="round"/>
-
-            <!-- Mouth -->
-            <path d="M 140 218 Q 150 226 160 218" stroke="#3d2a1e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-          </svg>
-          <span class="mily-doll-caption">say hi ✨</span>
-        </div>
+    <div class="year-block">
+      <span class="year-text" data-text="2026">2026</span>
+      <div class="star-row">
+        <span class="star">✦</span><span class="star">✦</span><span class="star">✦</span><span class="star">✦</span>
       </div>
     </div>
 
-    <div class="hero-stats reveal delay-5">
-      <div class="hero-stat"><span class="stat-num" data-target="11">0</span><span class="stat-label">Projects</span></div>
-      <div class="hero-stat-div"></div>
-      <div class="hero-stat"><span class="stat-num" data-target="3">0</span><span class="stat-label">Disciplines</span></div>
-      <div class="hero-stat-div"></div>
-      <div class="hero-stat"><span class="stat-num" data-target="8">0</span><span class="stat-label">Experiences</span></div>
-      <div class="hero-stat-div"></div>
-      <div class="hero-stat"><span class="stat-num" data-target="100">0</span><span class="stat-label">Videos & Photos taken</span></div>
+    <div class="name-block">
+      <h2 class="name-text">RABEYA<br>MILY</h2>
+      <div class="divider-line"></div>
+      <p class="bio-text">Computer Science student and visual storyteller blending technology, economics, and creative media from Abu Dhabi. Originally from Bangladesh. </p>
+      <div class="star-row right-stars">
+        <span class="star">✦</span><span class="star">✦</span><span class="star">✦</span><span class="star">✦</span>
+      </div>
     </div>
 
-    <div class="scroll-hint reveal delay-5">
-      <span>scroll</span>
+    <div class="scroll-hint hero-scroll-hint">
+      <span>SCROLL</span>
       <div class="scroll-line"></div>
     </div>
   </section>
@@ -246,22 +143,10 @@
       </div>
       <div class="about-grid">
         <div class="about-text reveal delay-1">
-          <p>I'm <strong>Rabeya</strong>, a senior at NYU Abu Dhabi pursuing a degree in Computer Science, with minors in Economics and Interactive Media. I love building things that live at the boundary of technology and human experience — whether that's a data-driven web app, a generative art piece, or an economic model that tells a story.</p>
-          <p>My academic interests span machine learning, behavioral economics, and creative coding. Outside the classroom I'm a photographer and videographer, chasing light across Abu Dhabi's coastlines and city streets with my camera. I believe the same curiosity that makes good code also makes a great photograph.</p>
-          <p>I'm actively looking for exciting projects that challenge me to think across disciplines.</p>
-
-          <div class="cv-banner reveal delay-2">
-            <div class="cv-banner-text">
-              <span class="cv-banner-title">Curriculum Vitae</span>
-              <span class="cv-banner-sub">Full academic &amp; professional background</span>
-            </div>
-            <div class="cv-banner-actions">
-              <a href="cv/rabeya-cv.pdf" class="btn-cv-dl" download>Download PDF</a>
-              <button class="btn-cv-view" id="btn-cv-view-about">View online</button>
-            </div>
-          </div>
-        </div>
-        <div class="about-right reveal delay-2">
+          <p>I'm Rabeya, a senior at NYUAD pursuing a degree in Computer Science, with minors in Economics and Interactive Media. I'm deeply interested in building ideas that sit at the intersection of technology, creativity, and human experience — whether that means designing a data-driven web application, or experimenting with generative art, reveals meaningful patterns and tells a compelling story.</p>
+          <p>My academic interests span machine learning, behavioral economics, human-centered design, and creative coding. I'm especially drawn to projects that combine analytical thinking with imagination, where technical systems can be used to better understand people, solve real problems, or create something beautiful and unexpected. I enjoy exploring how technology can be both functional and expressive.</p>
+          <p>Outside the classroom, I'm a photographer and videographer, often chasing light across Abu Dhabi's coastlines, desert landscapes, and city streets with my camera. Visual storytelling has taught me to notice detail, emotion, and perspective — skills that influence how I approach coding and design.</p>
+          
           <div class="about-cards">
             <div class="info-card">
               <span class="info-card-label">Major</span>
@@ -269,35 +154,33 @@
             </div>
             <div class="info-card">
               <span class="info-card-label">Minor</span>
-              <span class="info-card-value">Economics</span>
-            </div>
-            <div class="info-card">
-              <span class="info-card-label">Minor</span>
-              <span class="info-card-value">Interactive Media</span>
+              <span class="info-card-value">Economics and Interactive Media</span>
             </div>
             <div class="info-card">
               <span class="info-card-label">University</span>
-              <span class="info-card-value"> NYU Abu Dhabi</span>
+              <span class="info-card-value">New York University Abu Dhabi</span>
             </div>
             <div class="info-card">
               <span class="info-card-label">Home Country</span>
               <span class="info-card-value">Bangladesh 🇧🇩</span>
             </div>
-            <div class="info-card">
-              <span class="info-card-label">Focus Areas</span>
-              <span class="info-card-value">Creative Tech</span>
-            </div>
           </div>
+        </div>
+        <div class="about-right reveal delay-2">
+          <div class="about-right-photo">
+            <img src="assets/myself/mily2.png" alt="Rabeya portrait" onerror="this.style.display='none'" />
+          </div>
+          <p class="about-right-name">Rabey Zahan Mily</p>
 
           <!-- Interest tags -->
           <div class="interests-block reveal delay-3">
-            <div class="interest-chip"><span class="chip-icon">⌨</span> Creative Coding</div>
-            <div class="interest-chip"><span class="chip-icon">📈</span> Behavioral Econ</div>
+            <div class="interest-chip"><span class="chip-icon">⌨</span> Coding</div>
+            <div class="interest-chip"><span class="chip-icon">📈</span> Econ</div>
             <div class="interest-chip"><span class="chip-icon">📷</span> Photography</div>
             <div class="interest-chip"><span class="chip-icon">🎬</span> Videography</div>
-            <div class="interest-chip"><span class="chip-icon">🧵🪡</span> Design</div>
+            <div class="interest-chip"><span class="chip-icon">🪡</span> Design</div>
             <div class="interest-chip"><span class="chip-icon">🎨</span> Art</div>
-            <div class="interest-chip"><span class="chip-icon">🗽🗼</span> Travel</div>
+            <div class="interest-chip"><span class="chip-icon">🗼</span> Travel</div>
             <div class="interest-chip"><span class="chip-icon">🌊</span> Abu Dhabi</div>
           </div>
         </div>
@@ -312,11 +195,140 @@
         <span class="section-number">02</span>
         <h2 class="section-title">Projects</h2>
       </div>
-      <div class="projects-grid" id="projects-grid">
+
+      <div class="projects-groups" id="projects-grid">
+        <div class="projects-type-shell">
+          <div class="projects-type-tabs" role="tablist" aria-label="Project categories">
+            <button type="button" class="projects-type-tab" id="tab-projects-im" role="tab" aria-selected="true" aria-controls="im-projects" tabindex="0">Interactive Media</button>
+            <button type="button" class="projects-type-tab" id="tab-projects-cs" role="tab" aria-selected="false" aria-controls="cs-projects" tabindex="-1">CS &amp; HCI</button>
+          </div>
+          <div class="projects-panels-viewport">
+            <div class="projects-panels-track" id="projects-panels-track" data-active="im">
+        <div class="project-group project-group--im reveal delay-1" id="im-projects" role="tabpanel" aria-labelledby="tab-projects-im" aria-hidden="false">
+          <div class="projects-grid projects-grid--im" id="im-projects-grid">
 
         <div class="project-card reveal delay-1">
           <div class="project-img">
-            <img src="assets/project01_skillsync.png" alt="SkillSync — AI resume and job matching platform" onerror="this.style.display='none'" />
+            <img src="assets/project11_moments.png" alt="Moments — memory lane gallery on GitHub Pages" onerror="this.style.display='none'" />
+            <div class="project-img-placeholder"><span>01</span></div>
+            <div class="project-overlay">
+              <a href="https://rabeyamily.github.io/Moments/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/Moments" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-overview-box">
+              <h3 class="project-title">Moments</h3>
+              <p class="project-desc">Personal “memory lane” site: fullscreen photo carousel, curated quotes, a lightweight guest message wall, and About—built with vanilla HTML, CSS, and JavaScript with bundled media; live on GitHub Pages.</p>
+              <div class="project-tags"><span class="proj-tag">JavaScript</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">Creative</span></div>
+            </div>
+            <div class="project-actions">
+              <a href="https://rabeyamily.github.io/Moments/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/Moments" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project-card reveal delay-2">
+          <div class="project-img">
+            <img src="assets/project09_sound.png" alt="Sound Guardian — GitHub Pages" onerror="this.style.display='none'" />
+            <div class="project-img-placeholder"><span>02</span></div>
+            <div class="project-overlay">
+              <a href="https://rabeyamily.github.io/Sound-Guardian/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/Sound-Guardian" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-overview-box">
+              <h3 class="project-title">Sound Guardian</h3>
+              <p class="project-desc">Sound-led Communications Lab piece—layered atmosphere, typographic rhythm, and CSS-heavy staging on GitHub Pages.</p>
+              <div class="project-tags"><span class="proj-tag">CSS</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">CommLab</span></div>
+            </div>
+            <div class="project-actions">
+              <a href="https://rabeyamily.github.io/Sound-Guardian/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/Sound-Guardian" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project-card reveal delay-3">
+          <div class="project-img">
+            <img src="assets/project08_video.png" alt="A Day in Two Lives — GitHub Pages site" onerror="this.style.display='none'" />
+            <div class="project-img-placeholder"><span>03</span></div>
+            <div class="project-overlay">
+              <a href="https://rabeyamily.github.io/A-Day-In-Two-Lives/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/A-Day-In-Two-Lives" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-overview-box">
+              <h3 class="project-title">A Day in Two Lives</h3>
+              <p class="project-desc">Communications Lab piece: two parallel day-in-the-life video threads (Avani & Asemai)—flippable day chapters, watch-and-compare beats, lightweight voting, and a browser “polaroid” finisher. Vanilla HTML, CSS, and JavaScript; GitHub Pages.</p>
+              <div class="project-tags"><span class="proj-tag">HTML/CSS</span><span class="proj-tag">JavaScript</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">CommLab</span></div>
+            </div>
+            <div class="project-actions">
+              <a href="https://rabeyamily.github.io/A-Day-In-Two-Lives/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/A-Day-In-Two-Lives" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project-card extra">
+          <div class="project-img">
+            <img src="assets/project07_comic.png" alt="MAFIA Campus Cats — GitHub Pages" onerror="this.style.display='none'" />
+            <div class="project-img-placeholder"><span>04</span></div>
+            <div class="project-overlay">
+              <a href="https://rabeyamily.github.io/MAFIA-CampusCats/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/MAFIA-CampusCats" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-overview-box">
+              <h3 class="project-title">MAFIA Campus Cats</h3>
+              <p class="project-desc">Scroll-native comic layout for Communications Lab—panels, lettering, and pacing tuned for reading on the web (GitHub Pages).</p>
+              <div class="project-tags"><span class="proj-tag">JavaScript</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">CommLab</span></div>
+            </div>
+            <div class="project-actions">
+              <a href="https://rabeyamily.github.io/MAFIA-CampusCats/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
+              <a href="https://github.com/rabeyamily/MAFIA-CampusCats" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="project-card extra">
+          <div class="project-img">
+            <img src="assets/project10_portfolio.png" alt="Portfolio site repository" onerror="this.style.display='none'" />
+            <div class="project-img-placeholder"><span>05</span></div>
+            <div class="project-overlay">
+              <a href="#home" class="overlay-btn">This site</a>
+              <a href="https://github.com/rabeyamily/Portfolio-Mily" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-overview-box">
+              <h3 class="project-title">Portfolio (Mily)</h3>
+              <p class="project-desc">This hand-coded portfolio: custom layout and motion, CV modal with PDF embed, Formspree contact, creative photo/video gallery—static-hosting friendly and versioned on GitHub.</p>
+              <div class="project-tags"><span class="proj-tag">HTML/CSS</span><span class="proj-tag">JavaScript</span><span class="proj-tag">UI</span></div>
+            </div>
+            <div class="project-actions">
+              <a href="#home" class="btn-proj">This site</a>
+              <a href="https://github.com/rabeyamily/Portfolio-Mily" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+          </div>
+        </div>
+
+          </div>
+          <div class="view-all-wrap project-view-toggle-wrap">
+            <button type="button" class="btn-view-all" id="btn-im-projects-toggle" aria-expanded="false">View more <span class="toggle-icon">↓</span></button>
+          </div>
+        </div>
+
+        <div class="project-group project-group--cs reveal delay-2" id="cs-projects" role="tabpanel" aria-labelledby="tab-projects-cs" aria-hidden="true" inert>
+          <div class="projects-grid projects-grid--cs" id="cs-projects-grid">
+
+        <div class="project-card reveal delay-1">
+          <div class="project-img">
+            <img src="assets/project01_skillsync.png" alt="SkillSync — resume and job matching platform" onerror="this.style.display='none'" />
             <div class="project-img-placeholder"><span>01</span></div>
             <div class="project-overlay">
               <a href="https://capstone-skill-sync-cmil.vercel.app" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
@@ -444,119 +456,14 @@
           </div>
         </div>
 
-        <div class="project-card extra">
-          <div class="project-img">
-            <img src="assets/project07_comic.png" alt="Comic Comms Lab — GitHub Pages" onerror="this.style.display='none'" />
-            <div class="project-img-placeholder"><span>07</span></div>
-            <div class="project-overlay">
-              <a href="https://rabeyamily.github.io/Comic_CommsLab/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Comic_CommsLab" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
           </div>
-          <div class="project-body">
-            <div class="project-overview-box">
-              <h3 class="project-title">Comic Comms Lab</h3>
-              <p class="project-desc">Scroll-native comic layout for Communications Lab—panels, lettering, and pacing tuned for reading on the web (GitHub Pages).</p>
-              <div class="project-tags"><span class="proj-tag">JavaScript</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">CommLab</span></div>
-            </div>
-            <div class="project-actions">
-              <a href="https://rabeyamily.github.io/Comic_CommsLab/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Comic_CommsLab" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <div class="view-all-wrap project-view-toggle-wrap reveal delay-3">
+            <button type="button" class="btn-view-all" id="btn-cs-projects-toggle" aria-expanded="false">View all <span class="toggle-icon">↓</span></button>
+          </div>
+        </div>
             </div>
           </div>
         </div>
-
-        <div class="project-card extra">
-          <div class="project-img">
-            <img src="assets/project08_video.png" alt="Video-Project — GitHub Pages site" onerror="this.style.display='none'" />
-            <div class="project-img-placeholder"><span>08</span></div>
-            <div class="project-overlay">
-              <a href="https://rabeyamily.github.io/Video-Project/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Video-Project" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-          <div class="project-body">
-            <div class="project-overview-box">
-              <h3 class="project-title">Video-Project</h3>
-              <p class="project-desc">Video-forward coursework site: hero treatments, chapter-like sections, and responsive presentation—static HTML/CSS on GitHub Pages.</p>
-              <div class="project-tags"><span class="proj-tag">HTML/CSS</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">Creative</span></div>
-            </div>
-            <div class="project-actions">
-              <a href="https://rabeyamily.github.io/Video-Project/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Video-Project" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="project-card extra">
-          <div class="project-img">
-            <img src="assets/project09_sound.png" alt="Sound Comms Lab — GitHub Pages" onerror="this.style.display='none'" />
-            <div class="project-img-placeholder"><span>09</span></div>
-            <div class="project-overlay">
-              <a href="https://rabeyamily.github.io/Sound_CommLab/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Sound_CommLab" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-          <div class="project-body">
-            <div class="project-overview-box">
-              <h3 class="project-title">Sound Comms Lab</h3>
-              <p class="project-desc">Sound-led Communications Lab piece—layered atmosphere, typographic rhythm, and CSS-heavy staging on GitHub Pages.</p>
-              <div class="project-tags"><span class="proj-tag">CSS</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">CommLab</span></div>
-            </div>
-            <div class="project-actions">
-              <a href="https://rabeyamily.github.io/Sound_CommLab/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Sound_CommLab" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="project-card extra">
-          <div class="project-img">
-            <img src="assets/project10_portfolio.png" alt="Portfolio site repository" onerror="this.style.display='none'" />
-            <div class="project-img-placeholder"><span>10</span></div>
-            <div class="project-overlay">
-              <a href="#home" class="overlay-btn">This site</a>
-              <a href="https://github.com/rabeyamily/Portfolio-Mily" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-          <div class="project-body">
-            <div class="project-overview-box">
-              <h3 class="project-title">Portfolio (Mily)</h3>
-              <p class="project-desc">This hand-coded portfolio: custom layout and motion, CV modal with PDF embed, Formspree contact, creative photo/video gallery—static-hosting friendly and versioned on GitHub.</p>
-              <div class="project-tags"><span class="proj-tag">HTML/CSS</span><span class="proj-tag">JavaScript</span><span class="proj-tag">UI</span></div>
-            </div>
-            <div class="project-actions">
-              <a href="#home" class="btn-proj">This site</a>
-              <a href="https://github.com/rabeyamily/Portfolio-Mily" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="project-card extra">
-          <div class="project-img">
-            <img src="assets/project11_moments.png" alt="Moments — memory lane gallery on GitHub Pages" onerror="this.style.display='none'" />
-            <div class="project-img-placeholder"><span>11</span></div>
-            <div class="project-overlay">
-              <a href="https://rabeyamily.github.io/Moments/" class="overlay-btn" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Moments" class="overlay-btn" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-          <div class="project-body">
-            <div class="project-overview-box">
-              <h3 class="project-title">Moments</h3>
-              <p class="project-desc">Personal “memory lane” site: fullscreen photo carousel, curated quotes, a lightweight guest message wall, and About—built with vanilla HTML, CSS, and JavaScript with bundled media; live on GitHub Pages.</p>
-              <div class="project-tags"><span class="proj-tag">JavaScript</span><span class="proj-tag">GitHub Pages</span><span class="proj-tag">Creative</span></div>
-            </div>
-            <div class="project-actions">
-              <a href="https://rabeyamily.github.io/Moments/" class="btn-proj" target="_blank" rel="noopener noreferrer">Live Demo</a>
-              <a href="https://github.com/rabeyamily/Moments" class="btn-proj" target="_blank" rel="noopener noreferrer">GitHub</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <div class="view-all-wrap reveal delay-4">
-        <button class="btn-view-all" id="btn-projects-toggle">View All <span class="toggle-icon">↓</span></button>
       </div>
     </div>
   </section>
@@ -571,7 +478,7 @@
       <div class="exp-grid">
 
         <div class="skills-col reveal delay-1">
-          <h3 class="sub-heading">Skills</h3>
+          <h3 class="sub-heading projects-subheading">Skills</h3>
           <div class="skill-group">
             <div class="skill-group-label">Languages</div>
             <div class="skill-pills">
@@ -605,7 +512,7 @@
             <div class="skill-pills">
               <span class="skill-pill">Machine learning</span>
               <span class="skill-pill">Data visualization</span>
-              <span class="skill-pill"></span>
+      
               <span class="skill-pill">Behavioral economics</span>
             </div>
           </div>
@@ -623,13 +530,13 @@
         <div class="exp-divider"></div>
 
         <div class="exp-col reveal delay-2">
-          <h3 class="sub-heading">Experience</h3>
+          <h3 class="sub-heading projects-subheading">Experiences</h3>
           <div class="exp-list" id="exp-list">
             <div class="exp-item">
               <div class="exp-marker"></div>
               <div class="exp-content">
                 <div class="exp-header">
-                  <span class="exp-role">Communications Team Intern — Office of Athletics, NYU Abu Dhabi</span>
+                  <span class="exp-role">Communications Team Intern — Office of Athletics, NYUAD</span>
                   <span class="exp-date">Oct 2025 – Present</span>
                 </div>
                 <p class="exp-desc">Supporting communications for athletics and campus life: coordinating content, helping tell student-athlete stories, and working with the team to keep channels clear and engaging.</p>
@@ -639,7 +546,7 @@
               <div class="exp-marker"></div>
               <div class="exp-content">
                 <div class="exp-header">
-                  <span class="exp-role">Global Outreach Intern — Visiting Students Program, NYU Abu Dhabi</span>
+                  <span class="exp-role">Global Outreach Intern — Visiting Students Program, NYUAD</span>
                   <span class="exp-date">Jan 2025 – Present</span>
                 </div>
                 <p class="exp-desc">Creating and executing digital content for NYUAD’s Visiting Students Program: graphics, short-form video, and posts that showcase the student experience; managing social accounts; engaging audiences and inquiries; tracking metrics to refine strategy; and collaborating with marketing and student ambassadors on authentic, student-led content.</p>
@@ -649,10 +556,10 @@
               <div class="exp-marker"></div>
               <div class="exp-content">
                 <div class="exp-header">
-                  <span class="exp-role">Global Education Officer (GEO) — NYU Abu Dhabi</span>
+                  <span class="exp-role">Global Education Officer (GEO) — NYUAD</span>
                   <span class="exp-date">Aug 2025 – Oct 2025</span>
                 </div>
-                <p class="exp-desc">Representing NYU Abu Dhabi in outreach and global education settings: supporting prospective students and families, coordinating with campus partners, and contributing to a welcoming, informed first impression of the university.</p>
+                <p class="exp-desc">Representing NYUAD in outreach and global education settings: supporting prospective students and families, coordinating with campus partners, and contributing to a welcoming, informed first impression of the university.</p>
               </div>
             </div>
             <div class="exp-item extra">
@@ -669,7 +576,7 @@
               <div class="exp-marker"></div>
               <div class="exp-content">
                 <div class="exp-header">
-                  <span class="exp-role">Interactive Media Lab Assistant — NYU Abu Dhabi</span>
+                  <span class="exp-role">Interactive Media Lab Assistant — NYUAD</span>
                   <span class="exp-date">Jan 2025 – Feb 2025</span>
                 </div>
                 <p class="exp-desc">Assisting the Interactive Media Lab with workshops and day-to-day operations, supporting equipment and projects so students and faculty can build and experiment with interactive and creative technology.</p>
@@ -679,7 +586,7 @@
               <div class="exp-marker"></div>
               <div class="exp-content">
                 <div class="exp-header">
-                  <span class="exp-role">Social Media — NYU Paris (via NYU Abu Dhabi)</span>
+                  <span class="exp-role">Social Media — NYU Paris (via NYUAD)</span>
                   <span class="exp-date">Jan 2024 – May 2024</span>
                 </div>
                 <p class="exp-desc">Managing social channels for the NYU Paris site during study away: planning content, highlighting student life in Paris, and keeping the community informed and engaged.</p>
@@ -689,7 +596,7 @@
               <div class="exp-marker"></div>
               <div class="exp-content">
                 <div class="exp-header">
-                  <span class="exp-role">Public Affairs Manager — Ecoherence (student club), NYU Abu Dhabi</span>
+                  <span class="exp-role">Public Affairs Manager — Ecoherence (student club), NYUAD</span>
                   <span class="exp-date">Jan 2023 – Dec 2023</span>
                 </div>
                 <p class="exp-desc">Leading public-facing communications for a sustainability-focused student group: messaging around events and initiatives, and helping grow visibility for environmental programming on campus.</p>
@@ -699,7 +606,7 @@
               <div class="exp-marker"></div>
               <div class="exp-content">
                 <div class="exp-header">
-                  <span class="exp-role">Opinion Editor — The Gazelle, NYU Abu Dhabi</span>
+                  <span class="exp-role">Opinion Editor — The Gazelle, NYUAD</span>
                   <span class="exp-date">Jan 2023 – Dec 2023</span>
                 </div>
                 <p class="exp-desc">Editing the student newspaper’s opinion section: working with writers on clarity and argument, upholding editorial standards, and shaping discourse on campus issues.</p>
@@ -724,8 +631,6 @@
         <span class="section-sub-label">Photography &amp; Videography</span>
       </div>
 
-      <p class="creative-intro reveal delay-1">Beyond code, I see the world through a lens. I shoot street, landscape, and documentary-style photography across Abu Dhabi and wherever I travel. Videos are how I tell stories that stills can't.</p>
-
       <!-- Filter controls for creative media categories -->
       <div class="creative-filters reveal delay-2">
         <button class="filter-btn active" data-filter="all">All</button>
@@ -738,17 +643,6 @@
 
       <div class="view-all-wrap" id="creative-view-all-wrap">
         <button type="button" class="btn-view-all" id="btn-creative-toggle">View All <span class="toggle-icon">↓</span></button>
-      </div>
-
-      <!-- Photo lightbox overlay -->
-      <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" id="lightbox-close">✕</button>
-        <button class="lightbox-prev" id="lightbox-prev">‹</button>
-        <button class="lightbox-next" id="lightbox-next">›</button>
-        <div class="lightbox-img-wrap">
-          <img id="lightbox-img" src="" alt="" />
-          <p id="lightbox-caption" class="lightbox-caption"></p>
-        </div>
       </div>
 
     </div>
@@ -798,7 +692,7 @@
             </div>
           </div>
           <div class="cv-contact-row">
-            <a href="cv/rabeya-cv.pdf" class="btn-cv-dl" download>Download CV</a>
+            <a href="cv/Mily_s_Resume__SWE_.pdf" class="btn-cv-dl js-cv-download" download="rabeya-cv.pdf" target="_blank" rel="noopener noreferrer">Download CV</a>
             <button class="btn-cv-view" id="btn-cv-view-contact">View online</button>
           </div>
         </div>
@@ -840,6 +734,22 @@
     </div>
   </footer>
 
+  <!-- Full-screen photo lightbox (end of body: true viewport-fixed layer, not clipped by sections) -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
+    <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close and exit lightbox">
+      <span class="lightbox-close-x" aria-hidden="true">×</span>
+      <span class="lightbox-close-text">Exit</span>
+    </button>
+    <button type="button" class="lightbox-prev" id="lightbox-prev" aria-label="Previous">‹</button>
+    <button type="button" class="lightbox-next" id="lightbox-next" aria-label="Next">›</button>
+    <div class="lightbox-img-wrap">
+      <img id="lightbox-img" src="" alt="" />
+      <video id="lightbox-video" class="lightbox-video" playsinline preload="metadata" controls style="display:none"></video>
+      <p id="lightbox-caption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <!-- Defer is unnecessary when script is at end of body; loads after DOM is parsed -->
   <script src="script.js"></script>
 </body>
 </html>
