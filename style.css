@@ -675,6 +675,11 @@ button.projects-type-tab:focus-visible {
   gap: 0.7rem;
   align-items: center;
 }
+.creative-post-toolbar-right {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+}
 .creative-like-btn {
   border: 0;
   background: transparent;

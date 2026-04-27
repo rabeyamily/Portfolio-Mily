@@ -871,8 +871,8 @@ function initCreativeGallery() {
             <div class="creative-placeholder photo-ph"><span>📷</span></div>
           </div>
           <div class="creative-post-toolbar">
-            <div class="creative-post-toolbar-left">${postLikeButton}${postIconComment}${postIconSend}</div>
-            <div class="creative-post-toolbar-right">${postIconBookmark}</div>
+            <div class="creative-post-toolbar-left">${postLikeButton}</div>
+            <div class="creative-post-toolbar-right">${postIconComment}${postIconSend}${postIconBookmark}</div>
           </div>
           <p class="creative-post-caption creative-caption"></p>
         </div>`;
@@ -895,8 +895,8 @@ function initCreativeGallery() {
             <div class="creative-placeholder video-ph"><span>🎬</span></div>
           </div>
           <div class="creative-post-toolbar">
-            <div class="creative-post-toolbar-left">${postLikeButton}${postIconComment}${postIconSend}</div>
-            <div class="creative-post-toolbar-right">${postIconBookmark}</div>
+            <div class="creative-post-toolbar-left">${postLikeButton}</div>
+            <div class="creative-post-toolbar-right">${postIconComment}${postIconSend}${postIconBookmark}</div>
           </div>
           <p class="creative-post-caption creative-caption"></p>
         </div>`;
