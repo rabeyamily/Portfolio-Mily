@@ -18,6 +18,12 @@
  * 11. Misc — skill pill hover, anchor smooth scroll, photo error fallback, project card tilt, landing hero motion
  */
 
+// -----------------------------------------------------------------------------
+// How to read this file: it runs straight down at page load—no framework bootstrapping.
+// Each block grabs nodes once and attaches listeners. If you’re debugging, use the
+// numbered list in the banner above and search for the matching section header.
+// -----------------------------------------------------------------------------
+
 // -----------------------------------------------------------------
 // Particle system: animated ambient background with mouse repulsion.
 // -----------------------------------------------------------------
@@ -189,6 +195,8 @@ document.querySelectorAll('a, button').forEach(el => {
 });
 
 // Navbar: stay transparent on landing; tint once past home section.
+// The hero is intentionally busy—keeping the bar glassy there avoids a heavy bar on
+// top of the collage. Once you scroll into calmer sections, we snap to a readable tint.
 const navbar = document.getElementById('navbar');
 const homeSection = document.getElementById('home');
 
@@ -208,6 +216,7 @@ window.addEventListener('resize', updateNavbarState);
 updateNavbarState();
 
 // Mobile menu: toggle state and lock page scroll while open.
+// Body scroll lock is a small detail, but it stops the background from moving under the drawer.
 const hamburger  = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobile-menu');
 hamburger.addEventListener('click', () => {
@@ -223,7 +232,8 @@ document.querySelectorAll('.mob-link, .mob-cv').forEach(l => {
   });
 });
 
-/* When a section occupies the middle band of the viewport, mark its matching `.nav-link` as `.active`. */
+/* Nav “you are here” state: whichever section sits in the middle stripe of the viewport wins.
+   The asymmetric root margins mean we care about the reading band, not just touching the top. */
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('.nav-link');
 const sectObs = new IntersectionObserver(entries => {
@@ -236,7 +246,8 @@ const sectObs = new IntersectionObserver(entries => {
 }, { rootMargin: '-40% 0px -55% 0px' });
 sections.forEach(s => sectObs.observe(s));
 
-// Elements with `.reveal` get `.visible` once ~8% in view; unobserved after first trigger (one-shot).
+// Scroll reveals: each `.reveal` animates in once, then we stop observing so it doesn’t
+// flicker if the user scrolls up and down repeatedly.
 const revealObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
@@ -343,7 +354,8 @@ async function forceCvDownload(ev) {
   const protocol = window.location.protocol;
   const isWebProtocol = protocol === 'http:' || protocol === 'https:';
   ev.preventDefault();
-  // For local previews (file://), skip fetch and force native save flow without navigation.
+  // `file://` previews (double-clicking index.html) usually block fetch(); fall back to a
+  // plain download click so local checks still feel sane. On GitHub Pages, fetch → blob is nicer.
   if (!isWebProtocol) {
     try {
       triggerNativeCvDownload(anchor);
@@ -388,6 +400,7 @@ if (cvClose) cvClose.addEventListener('click', closeCV);
 if (cvBackdrop) {
   cvBackdrop.addEventListener('click', e => { if (e.target === cvBackdrop) closeCV(); });
 }
+// Escape closes whichever overlay is relevant; both helpers no-op if already closed.
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCV(); closeLightbox(); } });
 
 // Projects: IM / CS tabs (slide) + expandable grids.
@@ -443,6 +456,8 @@ if (tabProjectsIm && tabProjectsCs) {
       }
     });
   }
+  // Deep links like #cs-projects should land on the right tab; if there’s no hash, we still
+  // run once so the edge nav buttons pick up correct disabled state from `data-active`.
   const syncProjectHash = () => {
     if (location.hash === '#cs-projects') setProjectTab('cs');
     else if (location.hash === '#im-projects') setProjectTab('im');
@@ -505,7 +520,7 @@ function bindProjectExtraToggle(button, getExtraCards, labelClosed, scrollSectio
 bindProjectExtraToggle(document.getElementById('btn-im-projects-toggle'), extraIm, 'View more', 'im-projects');
 bindProjectExtraToggle(document.getElementById('btn-cs-projects-toggle'), extraCs, 'View all', 'cs-projects');
 
-// Experiences timeline expansion/collapse.
+// Experiences: same “reveal extras + smooth scroll back” pattern as project grids.
 const btnExp   = document.getElementById('btn-exp-toggle');
 const extraExp = document.querySelectorAll('.exp-item.extra');
 let expOpen    = false;
@@ -615,6 +630,8 @@ function closeLightbox() {
 function showLightboxItem() {
   const item = lightboxItems[lbIndex];
   if (!item) return;
+  // Mobile Safari is picky: try unmuted play first, then fall back to muted autoplay if the
+  // browser blocks audio without a direct user gesture.
   if (item.kind === 'video') {
     resetLightboxImage();
     if (item.src && lbVideo) {
@@ -677,7 +694,8 @@ if (lightbox) {
   });
 }
 
-// Creative gallery manifests (one entry per local media file).
+// Creative gallery manifests — keep these arrays aligned with files on disk. The gallery
+// builder interleaves photos and videos so the grid doesn’t read as two separate blocks.
 const PHOTO_BASE = 'assets/photos';
 const VIDEO_BASE = 'assets/Videos';
 
@@ -743,6 +761,8 @@ let creativeExpanded = false;
 const CREATIVE_LIKES_STORAGE_KEY = 'portfolioCreativeLikesV1';
 let creativeLikes = new Set();
 
+// “Loved by you” is entirely front-end: IDs are filenames, persisted in localStorage so
+// repeat visitors keep their picks without a backend.
 function loadCreativeLikes() {
   try {
     const raw = localStorage.getItem(CREATIVE_LIKES_STORAGE_KEY);
@@ -815,6 +835,7 @@ function applyCreativeVisibility() {
       cItem.style.transform = '';
       cItem.classList.remove('hidden');
     } else {
+      // Fade out first, then `hidden` so screen readers / layout skip collapsed tiles cleanly.
       cItem.style.opacity = '0';
       cItem.style.transform = 'scale(.95)';
       setTimeout(() => cItem.classList.add('hidden'), 300);
@@ -983,6 +1004,7 @@ initCreativeGallery();
 // -----------------------------------------------------------------
 // Contact: Formspree endpoint receives POST as `multipart/form-data` (same as native submit).
 // -----------------------------------------------------------------
+// We POST with fetch so visitors stay on the page and get inline success / error copy.
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mqewgnyb';
 const form = document.getElementById('contact-form');
 const sendBtn = document.getElementById('send-btn');
@@ -1043,7 +1065,8 @@ document.querySelectorAll('.skill-pill').forEach(p => {
   p.addEventListener('mouseleave', () => p.style.transform = '');
 });
 
-// Same-document `#hash` links: smooth-scroll with offset equal to fixed `--nav-h` to avoid underlap.
+// In-page anchors: native smooth scroll ignores the fixed header, so we subtract `--nav-h`
+// manually; keeps section titles from hiding under the nav bar.
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const target = document.querySelector(a.getAttribute('href'));
@@ -1067,7 +1090,8 @@ document.querySelectorAll('.photo-frame img').forEach(img => {
   });
 });
 
-// Projects: light 3D tilt on pointer move (resets on leave; complements CSS hover lift).
+// Projects: subtle perspective tilt on desktop pointers—purely decorative; CSS still does
+// the main hover lift so touch users aren’t missing critical feedback.
 document.querySelectorAll('.project-card').forEach(card => {
   card.addEventListener('mousemove', e => {
     const rect = card.getBoundingClientRect();
@@ -1161,6 +1185,7 @@ if (landingHero && landingPortText && landingPhotoWrap && landingYearText && lan
     });
   });
 
+  // Split “PORTFOLIO” into spans so hovering can wiggle letters—small delight, desktop only.
   const text = landingPortText.textContent || '';
   landingPortText.innerHTML = text
     .split('')

@@ -14,6 +14,9 @@
     9) #lightbox Full-screen overlay for creative photos and videos (shared carousel)
 
   Assets: relative paths (assets/…, cv/…). Serve over http(s) for PDF iframe, video, and form POST.
+
+  Maintenance: most copy lives here, but Creative grid tiles are built from photo/video lists in
+  script.js, and several sections rely on matching class names (e.g. .reveal) for motion—grep before renaming.
 -->
 <html lang="en">
 <head>
@@ -94,7 +97,7 @@
     </div>
   </div>
 
-  <!-- Home / Hero section -->
+  <!-- Home / Hero — landing collage: large “PORTFOLIO” type, portrait, year, bio; parallax wired in script.js -->
   <section id="home" class="section hero-section hero-portfolio">
     <div class="hero-creative-layer" aria-hidden="true">
       <img class="hero-element hero-element-camera" src="assets/landing%20page%20elements/1.png" alt="" />
@@ -134,7 +137,7 @@
     </div>
   </section>
 
-  <!-- About section -->
+  <!-- About — narrative + 2×2 education cards + interest chips (cream chips sit on dark band for contrast) -->
   <section id="about" class="section about-section">
     <div class="container">
       <div class="section-header reveal">
@@ -147,6 +150,7 @@
           <p>My academic interests span machine learning, behavioral economics, human-centered design, and creative coding. I'm especially drawn to projects that combine analytical thinking with imagination, where technical systems can be used to better understand people, solve real problems, or create something beautiful and unexpected. I enjoy exploring how technology can be both functional and expressive.</p>
           <p>Outside the classroom, I'm a photographer and videographer, often chasing light across Abu Dhabi's coastlines, desert landscapes, and city streets with my camera. Visual storytelling has taught me to notice detail, emotion, and perspective — skills that influence how I approach coding and design.</p>
           
+          <!-- Quick facts: labels use the same ink as values so they stay readable on purple glass cards -->
           <div class="about-cards">
             <div class="info-card">
               <span class="info-card-label">Major</span>
@@ -188,7 +192,7 @@
     </div>
   </section>
 
-  <!-- Projects section -->
+  <!-- Projects — cream “paper” section; IM vs CS are two wide panels on a sliding track (see .projects-panels-track) -->
   <section id="projects" class="section projects-section">
     <div class="container">
       <div class="section-header reveal">
@@ -196,6 +200,7 @@
         <h2 class="section-title">Projects</h2>
       </div>
 
+      <!-- IM / CS tab panels + grids; “extra” cards stay hidden until View more / View all toggles them -->
       <div class="projects-groups" id="projects-grid">
         <div class="projects-type-shell">
           <div class="projects-type-tabs" role="tablist" aria-label="Project categories">
@@ -499,7 +504,7 @@
     </div>
   </section>
 
-  <!-- Skills and experience timeline -->
+  <!-- Skills (pills) + experience column; rows with class .extra mirror the project “view more” pattern -->
   <section id="experiences" class="section exp-section">
     <div class="container">
       <div class="section-header reveal">
@@ -653,7 +658,7 @@
     </div>
   </section>
 
-  <!-- Creative portfolio section (photography and video) -->
+  <!-- Creative — #creative-grid starts empty; script interleaves photos/videos into faux “social post” cards -->
   <section id="creative" class="section creative-section">
     <div class="container">
       <div class="section-header reveal">
@@ -680,7 +685,7 @@
     </div>
   </section>
 
-  <!-- Contact section -->
+  <!-- Contact — Formspree form + mailto links; .js-cv-download hooks trigger the same blob download path -->
   <section id="contact" class="section contact-section">
     <div class="container">
       <div class="section-header reveal">
@@ -766,7 +771,7 @@
     </div>
   </footer>
 
-  <!-- Full-screen photo lightbox (end of body: true viewport-fixed layer, not clipped by sections) -->
+  <!-- Lightbox: shared viewer for Creative photos/videos; list order is rebuilt from visible grid items each open -->
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
     <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close and exit lightbox">
       <span class="lightbox-close-x" aria-hidden="true">×</span>
@@ -781,7 +786,7 @@
     </div>
   </div>
 
-  <!-- Defer is unnecessary when script is at end of body; loads after DOM is parsed -->
+  <!-- script.js at end of body: DOM exists before any listener runs; no defer needed on a static site -->
   <script src="script.js"></script>
 </body>
 </html>
