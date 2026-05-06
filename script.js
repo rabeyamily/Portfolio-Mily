@@ -419,6 +419,10 @@ function setProjectTab(which) {
     panelProjectsIm.setAttribute('inert', '');
     panelProjectsCs.removeAttribute('inert');
   }
+  const btnPrev = document.getElementById('projects-page-prev');
+  const btnNext = document.getElementById('projects-page-next');
+  if (btnPrev) btnPrev.disabled = isIm;
+  if (btnNext) btnNext.disabled = !isIm;
 }
 
 if (tabProjectsIm && tabProjectsCs) {
@@ -442,9 +446,19 @@ if (tabProjectsIm && tabProjectsCs) {
   const syncProjectHash = () => {
     if (location.hash === '#cs-projects') setProjectTab('cs');
     else if (location.hash === '#im-projects') setProjectTab('im');
+    else {
+      const initial = projectsTrack?.getAttribute('data-active') === 'cs' ? 'cs' : 'im';
+      setProjectTab(initial);
+    }
   };
   syncProjectHash();
   window.addEventListener('hashchange', syncProjectHash);
+
+  /** IM ↔ CS: edge controls (prev → IM, next → CS). */
+  const btnProjectsPrev = document.getElementById('projects-page-prev');
+  const btnProjectsNext = document.getElementById('projects-page-next');
+  btnProjectsPrev?.addEventListener('click', () => setProjectTab('im'));
+  btnProjectsNext?.addEventListener('click', () => setProjectTab('cs'));
 }
 
 // Projects: expand/collapse extra cards (IM + CS).
@@ -701,7 +715,6 @@ const CREATIVE_PHOTO_FILES = [
   { file: 'flower2.jpg', caption: 'Netherlands' },
   { file: 'food1.jpg', caption: 'Food' },
   { file: 'italy.jpg', caption: 'Italy' },
-  { file: 'louvre1.jpg', caption: 'Louvre I', tall: true },
   { file: 'milzz_E-Textile_Light-Up_Butterfly_Bracelet_Modern_editorial__68cbbdf7-c533-46f7-a87e-a65ce00ad3ca_0.png', caption: 'E-textile — editorial frame', tall: true },
   { file: 'monalisa.jpg', caption: 'Mona Lisa' },
   { file: 'norway2.jpg', caption: 'Norway' },
@@ -715,8 +728,6 @@ const CREATIVE_VIDEO_FILES = [
   { file: 'baking.mov', caption: 'Baking — short form' },
   { file: 'cooking.mov', caption: 'Cooking with friends' },
   { file: 'cooking2.mov', caption: 'Cooking II' },
-  { file: 'dayvlog.mov', caption: 'Day vlog' },
-  { file: 'iguessillgetonaplane.mov', caption: 'I guess I\'ll get on a plane' },
   { file: 'kayaking.mov', caption: 'Kayaking' },
   { file: 'life goes on.mov', caption: 'Life goes on — personal edit' },
   { file: 'nyc.mov', caption: 'NYC' },
